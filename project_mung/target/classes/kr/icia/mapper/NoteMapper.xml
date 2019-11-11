@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.icia.mapper.NoteMapper">
+ 	<select id="getRecvCount" resultType="String">
+ 		select count(*) from note where recvid = #{userid} and recvread = 0
+ 	</select>
+ 	<insert id="writemail">
+		insert
+		into
+		note(
+		noteno,
+		sentid,
+		recvid,
+		title,
+		content
+		) 
+		values(
+		note_seq.nextval,
+		#{sentid},
+		#{recvid},
+		#{title},
+		#{content}
+		)
+	</insert>
+	<select id="getSentList" resultType="kr.icia.domain.NoteVO">
+	 		select noteno,  
+	 		sentid, 
+	 		recvid, 
+	 		title, 
+	 		content, 
+	 		sentdate, 
+	 		readdate, 
+	 		recvread,
+	 		sentdel,
+	 		recvdel
+	 		from 
+	 		(select /*+index_desc(note noteno)*/
+	 		rownum rn, 
+	 		noteno, 
+	 		sentid,
+	 		recvid,
+	 		title, 
+	 		content, 
+	 		sentdate, 
+	 		readdate, 
+	 		decode(recvread,0,'읽지않음',1,'읽음') as recvread,
+			decode(sentdel,0,'전송완료',1,'삭제') as sentdel,
+			decode(recvdel,0,'전송완료',1,'삭제') as recvdel
+			from
+	 		note 
+	 		where 	
+	 		sentid = #{userid})
+	 </select>
+	 <select id="getRecvList" resultType="kr.icia.domain.NoteVO">
+
+	 		select noteno,  
+	 		sentid, 
+	 		recvid, 
+	 		title, 
+	 		content, 
+	 		sentdate, 
+	 		readdate, 
+	 		recvread,
+	 		sentdel,
+	 		recvdel
+	 		from 
+	 		(select /*+index_desc(note noteno)*/
+	 		rownum rn, 
+	 		noteno, 
+	 		sentid,
+	 		recvid,
+	 		title, 
+	 		content, 
+	 		sentdate, 
+	 		readdate, 
+	 		decode(recvread,0,'읽지않음',1,'읽음') as recvread,
+			decode(sentdel,0,'전송완료',1,'삭제') as sentdel,
+			decode(recvdel,0,'전송완료',1,'삭제') as recvdel
+			from
+	 		note 
+	 		where 	
+	 		recvid = #{userid})
+	 </select>
+	<select id="getRecv" resultType="kr.icia.domain.NoteVO">
+	 	select 
+	 		noteno,  
+	 		sentid, 
+	 		recvid, 
+	 		title, 
+	 		content, 
+	 		sentdate, 
+	 		readdate, 
+	 		recvread,
+	 		sentdel,
+	 		recvdel
+	 	from 
+	 	(select /*+index_desc(note noteno)*/
+	 		rownum rn, 
+	 		noteno, 
+	 		sentid,
+	 		recvid,
+	 		title, 
+	 		content, 
+	 		sentdate, 
+	 		readdate, 
+	 		decode(recvread,0,'읽지않음',1,'읽음') as recvread,
+			decode(sentdel,0,'전송완료',1,'삭제') as sentdel,
+			decode(recvdel,0,'전송완료',1,'삭제') as recvdel
+		from
+	 		note 
+	 	where 	
+	 		noteno = #{noteno}
+	 		)
+	 </select>
+	 <select id="getSent" resultType="kr.icia.domain.NoteVO">
+	 	select 
+	 		noteno,  
+	 		sentid, 
+	 		recvid, 
+	 		title, 
+	 		content, 
+	 		sentdate, 
+	 		readdate, 
+	 		recvread,
+	 		sentdel,
+	 		recvdel
+	 	from 
+	 	(select /*+index_desc(note noteno)*/
+	 		rownum rn, 
+	 		noteno, 
+	 		sentid,
+	 		recvid,
+	 		title, 
+	 		content, 
+	 		sentdate, 
+	 		readdate, 
+	 		decode(recvread,0,'읽지않음',1,'읽음') as recvread,
+			decode(sentdel,0,'전송완료',1,'삭제') as sentdel,
+			decode(recvdel,0,'전송완료',1,'삭제') as recvdel
+		from
+	 		note 
+	 	where 	
+	 		noteno = #{noteno}
+	 		)
+	 </select>
+	 <update id="updateRecvCount">
+	 	update note set recvread = 1,readdate = sysdate 
+	 	where noteno = #{noteno}
+	 </update>
+ </mapper>

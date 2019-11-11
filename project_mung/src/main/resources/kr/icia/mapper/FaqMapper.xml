@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.icia.mapper.FaqMapper">
+	<!-- 11-06 -->
+	<sql id="faqCriteria">
+		<trim prefix="(" suffix=") AND " prefixOverrides="OR">
+			<foreach item="type" collection="typeArr">
+				<trim prefix="OR">
+					<choose>
+						<when test="type=='T'.toString()">
+							title like '%'||#{keyword}||'%'
+						</when>
+						<when test="type=='C'.toString()">
+							content like '%'||#{keyword}||'%'
+						</when>
+					</choose>
+				</trim>
+			</foreach>
+		</trim>
+	</sql>
+	<!-- 11-06 -->
+	<insert id="register">
+		insert into board_faq(bno, title, content)
+		values(board_faq_seq.nextval, #{title}, #{content})
+	</insert>
+	<!-- 11-06 -->
+	<select id="faqList" resultType="kr.icia.domain.BoardFaqVO">
+		select
+		bno,
+		title,
+		content
+		from
+		(select
+		rownum rn,
+		bno,
+		title,
+		content
+		from
+		board_faq
+		where
+		<include refid="faqCriteria" />
+		
+		<![CDATA[
+			rownum <= #{pageNum} * #{amount})
+	 		where (rn > (#{pageNum}-1) * #{amount}) 
+	 		order by bno desc
+		]]>
+	</select>
+
+	<select id="faqCount" resultType="int">
+		select count(bno) from board_faq where
+
+		<include refid="faqCriteria" />
+		
+		<![CDATA[
+			bno > 0
+		]]>
+	</select>
+	<select id="getFaq" resultType="kr.icia.domain.BoardFaqVO">
+		select bno,
+		title,
+		content
+		from
+		board_faq
+		where bno =#{bno}
+	</select>
+	
+	<delete id="delete">
+		delete from board_faq where bno = #{bno}
+	</delete>
+	
+</mapper>

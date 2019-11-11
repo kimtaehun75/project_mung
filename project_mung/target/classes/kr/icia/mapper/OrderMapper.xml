@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.icia.mapper.OrderMapper">
+ 	<resultMap type="kr.icia.domain.OrderSaleVO" id="orderMap">
+		<id property="orderno" column="orderno"/>
+		<result property="orderno" column="orderno"/>
+		<result property="userid" column="userid"/>
+		<result property="userName" column="username"/>
+		<result property="addr_1" column="addr_1"/>
+		<result property="addr_2" column="addr_2"/>
+		<result property="addr_3" column="addr_3"/>
+		<result property="email" column="email"/>
+		<result property="phone" column="phone"/>
+		<result property="orderDate" column="orderdate"/>
+		<result property="state" column="state"/>
+		<result property="saleState" column="salestate"/>
+		<result property="cpnum" column="cpnum"/>
+		<result property="cpName" column="cpname"/>
+		<collection property="list" resultMap="listMap"/>
+	</resultMap>
+	<resultMap type="kr.icia.domain.OrderInfoVO" id="listMap">
+		<id property="saleno" column="saleno"/>
+		<result property="orderno" column="orderno"/>
+		<result property="saleno" column="saleno"/>
+		<result property="saleName" column="salename"/>
+		<result property="cost" column="cost"/>
+		<result property="amount" column="amount"/>
+		<result property="costSum" column="costsum"/>
+		<collection property="attachImage" resultMap="imageMap"/>
+	</resultMap>
+	<resultMap type="kr.icia.domain.SaleImageVO" id="imageMap">
+		<result property="uuid" column="uuid"/>
+		<result property="fileName" column="filename"/>
+		<result property="imagePath" column="imagepath"/>
+		<result property="saleno" column="saleno"/>
+	</resultMap>
+ 	<sql id="criteria">
+		<trim prefix="(" suffix=") AND" prefixOverrides="OR">
+			<foreach item="type" collection="typeArr">
+				<trim prefix="OR">
+					<choose>
+						<when test="type=='G'.toString()">
+							tear like '%'||#{keyword}||'%'
+						</when>
+						<when test="type=='N'.toString()">
+							username like '%'||#{keyword}||'%'
+						</when>
+						<when test="type=='I'.toString()">
+							m.userid like '%'||#{keyword}||'%'
+						</when>
+						<when test="type=='A'.toString()">
+							addr_2 like '%'||#{keyword}||'%'
+						</when>
+					</choose>
+				</trim>
+			</foreach>
+		</trim>
+	</sql>
+ 	<insert id="insertOrderSaleCoupon">
+ 		insert into order_sale(orderno,userid,username,addr_1,addr_2,addr_3,email,phone,cpnum) 
+ 		values(info_seq.nextval,#{userid},#{userName},#{addr_1},#{addr_2},#{addr_3},#{email},#{phone},#{cpnum})
+ 	</insert>
+ 	<insert id="insertOrderSale">
+ 		insert into order_sale(orderno,userid,username,addr_1,addr_2,addr_3,email,phone) 
+ 		values(info_seq.nextval,#{userid},#{userName},#{addr_1},#{addr_2},#{addr_3},#{email},#{phone})
+ 	</insert>
+ 	<insert id="insertOrderList">
+ 		insert into order_info(orderno,saleno,amount) 
+ 		values(#{orderno},#{saleno},#{amount})
+ 	</insert>
+ 	<select id="orderList" resultType="kr.icia.domain.OrderInfoVO">
+ 		select s.saleno,cost,c.amount 
+ 		from sale_cart c, sale s 
+		where c.saleno = s.saleno and userid = #{userid}
+ 	</select>
+ 	<select id="searchOrderno" resultType="int">
+ 		SELECT max(orderno) KEEP(DENSE_RANK FIRST ORDER BY orderno DESC) as orderno FROM order_sale
+ 	</select>
+ 	<select id="getOrderno" resultType="int">
+ 		select orderno from order_sale where userid = #{userid} order by orderno
+ 	</select>
+ 	<select id="callOrderList" resultType="kr.icia.domain.OrderSaleVO">
+ 		select distinct orderno,userid,username,addr_1,addr_2,addr_3,
+			email,phone,orderdate,state,salestate,
+			o.cpnum,cpname,
+			(select sum(cost) as allCost 
+			from sale s,order_info i
+			where s.saleno=i.saleno
+			group by orderno
+			having orderno = #{orderno}) as allCost,
+			(select distinct decode(type,'0',value,'1',
+			(select sum(cost)*value/100 from sale s,order_info o
+			where s.saleno = o.saleno
+			group by orderno
+			having orderno = #{orderno})) as discost
+			from coupon c,sale s,order_info o
+			where 
+			o.saleno = s.saleno 
+			and
+			cpnum=
+			(select cpnum from order_sale
+			where orderno = #{orderno})
+			and
+			orderno = #{orderno}) as discost,
+			(select distinct decode(type,'0',
+			(select sum(cost)-value
+			from
+			sale s,order_info o
+			where s.saleno = o.saleno
+			group by orderno
+			having orderno = #{orderno})
+			,'1',
+			(select sum(cost)-(sum(cost)*value/100) 
+			from sale s,order_info o
+			where s.saleno = o.saleno
+			group by orderno
+			having orderno = #{orderno})) as finalcost
+			from coupon c,sale s,order_info o
+			where 
+			o.saleno = s.saleno and
+			cpnum=
+			(select cpnum from order_sale
+			where orderno = #{orderno})
+			and
+			orderno = #{orderno}) as finalcost
+			from order_sale o,coupon c,sale s
+			where o.cpnum = c.cpnum and
+            orderno = #{orderno}
+			order by orderno
+ 	</select>
+ 	<select id="callOrderListNoCp" resultType="kr.icia.domain.OrderSaleVO">
+ 		select distinct orderno,userid,username,addr_1,addr_2,addr_3,
+			email,phone,orderdate,state,salestate,
+			(select sum(cost) as allCost 
+			from sale s,order_info i
+			where s.saleno=i.saleno
+			group by orderno
+			having orderno = #{orderno}) as allCost,
+			0 as disCost,
+			(select sum(cost) as allCost 
+			from sale s,order_info i
+			where s.saleno=i.saleno
+			group by orderno
+			having orderno = #{orderno}) as finalCost
+            from order_sale o,sale s
+			where 
+            orderno = #{orderno}
+			order by orderno
+ 	</select>
+ 	<select id="callProduct" resultMap="listMap">
+ 		select orderno,o.saleno,salename,
+			cost,
+			o.amount,
+			(cost*o.amount) as costSum,
+			uuid,imagepath,filename
+			from
+			order_info o,sale s,sale_img i
+			where o.saleno = s.saleno
+			and s.saleno = i.saleno
+			and orderno = #{orderno}
+ 	</select>
+ </mapper>

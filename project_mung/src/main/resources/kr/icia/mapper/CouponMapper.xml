@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.icia.mapper.CouponMapper">
+	<sql id="criteria">
+		<trim prefix="(" suffix=") AND" prefixOverrides="OR">
+			<foreach item="type" collection="typeArr">
+				<trim prefix="OR">
+					<choose>
+						<when test="type=='N'.toString()">
+							c.cpname like '%'||#{keyword}||'%'
+						</when>
+						<when test="type=='C'.toString()">
+							c.cpcontent like '%'||#{keyword}||'%'
+						</when>
+						<when test="type=='M'.toString()">
+							c.value like '%'||#{keyword}||'%'
+						</when>
+						<when test="type=='I'.toString()">
+							userid like '%'||#{keyword}||'%'
+						</when>
+					</choose>
+				</trim>
+			</foreach>
+		</trim>
+	</sql>
+	<resultMap type="kr.icia.domain.CouponVO" id="couponMap">
+		<id property="userid" column="userid"/>
+		<result property="cpnum" column="cpnum"/>
+		<result property="userid" column="userid"/>
+		<result property="cpName" column="cpname"/>
+		<result property="cpContent" column="cpcontent"/>
+		<result property="value" column="value"/>
+		<result property="type" column="type"/>
+		<result property="disCost" column="discost"/>
+		<result property="saleCost" column="salecost"/>
+		<result property="cpUpdate" column="cpupdate"/>
+		<result property="cpEndDate" column="cpenddate"/>
+		<collection property="grade" resultMap="gradeMap"/>
+	</resultMap>
+	<resultMap type="kr.icia.domain.GradeVO" id="gradeMap">
+	 	<result property="grade" column="grade"/>
+	 	<result property="tear" column="tear"/>
+	</resultMap>
+	<select id="haveCouponList" resultMap="couponMap">
+		select 
+			cpnum,
+			userid,
+			cpname,
+			cpupdate,
+			cpenddate,
+			cpcontent
+			from 
+			(select 
+			rownum rn,
+			userid,
+			c.cpnum,
+			cpname,
+			cpupdate,
+			cpenddate,
+			cpcontent
+			from 
+		coupon c,coupon_member m 
+		where c.cpnum = m.cpnum and
+		
+		<include refid="criteria"/>
+	 	
+	 	<![CDATA[
+	 		rownum <= #{pageNum} * #{amount})
+	 		where (rn > (#{pageNum}-1) * #{amount}) 
+	 		order by userid
+	 	]]>
+	</select>
+	<select id="haveUserCoupon" resultType="kr.icia.domain.CouponVO">
+		<![CDATA[
+			select 
+			m.cpnum,
+			cpname,
+			cpcontent,
+			value,
+			type,
+			cpupdate,
+			cpenddate,
+			userid 
+			from 
+			coupon c,coupon_member m 
+			where c.cpnum = m.cpnum and 
+			cpenddate > sysdate 
+			and
+			userid = #{userid}
+		]]>
+	</select>
+	<select id="getCouponList" resultMap="couponMap">
+		select 
+			cpnum,
+			cpname,
+			cpcontent,
+			value,
+			type
+			from 
+			(select 
+			rownum rn,
+			cpnum,
+			cpname,
+			cpcontent,
+			value,
+			decode(type,0,'-','%') as type
+			from 
+			coupon
+			where 
+		<include refid="criteria"/>
+	 	
+	 	<![CDATA[
+	 		rownum <= #{pageNum} * #{amount})
+	 		where (rn > (#{pageNum}-1) * #{amount}) 
+	 		order by cpnum
+	 	]]>
+	</select>
+	<select id="getCoupon" resultMap="couponMap">
+		select 
+			cpnum,
+			cpname,
+			cpcontent,
+			value,
+			decode(type,'0','-','%') as type
+			from 
+		 coupon
+	</select>
+	<select id="getCouponCount" resultType="int">
+		select count(*) from coupon where
+	 	
+	 	<include refid="criteria"/>
+	 	
+	 	<![CDATA[
+	 		cpnum > 0
+	 	]]>
+	</select>
+	<select id="haveCouponCount" resultType="int">
+		select count(*) from coupon_member m,coupon c where m.cpnum = c.cpnum and 
+	 	
+	 	<include refid="criteria"/>
+	 	
+	 	<![CDATA[
+	 		m.cpnum > 0
+	 	]]>
+	</select>
+	<insert id="insertCoupon">
+		insert into coupon(cpnum,cpname,cpcontent,value,type) 
+		values(coupon_seq.nextval,#{cpName},#{cpContent},#{value},#{type})
+	</insert>
+	<insert id="insertGradeCoupon">
+		insert into coupon_member(userid,cpnum,cpenddate) 
+		values(#{userid},#{cpnum},#{cpEndDate})
+	</insert>
+	<select id="getCouponValue" resultMap="couponMap">
+		select 
+		    ltrim(to_char(decode(type,'0',value,'1',
+		    (select (sum(cost)*value/100) from sale_cart c,sale s 
+		    where c.saleno = s.saleno
+		    group by userid
+		    having userid = #{userid})),'L999,999,999')) as discost,
+		    ltrim(to_char((select 
+		     decode(type,'0',sum(cost)-value,'1',sum(cost)-(sum(cost)*value/100))
+		    from sale_cart c,sale s 
+		    where c.saleno = s.saleno
+		    group by userid
+		    having userid = #{userid}),'L999,999,999')) as salecost
+		    from coupon 
+		    where cpnum = #{cpnum}
+	</select>
+	<delete id="deleteUser">
+		delete from coupon_member where userid = #{userid}
+	</delete>
+	<delete id="deleteCoupon">
+		delete from coupon_member where cpnum = #{cpnum} and userid = #{userid}
+	</delete>
+</mapper>

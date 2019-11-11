@@ -1,0 +1,369 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.icia.mapper.SaleMapper">
+	<sql id="criteria">
+		<trim prefix="(" suffix=") AND" prefixOverrides="OR">
+			<foreach item="type" collection="typeArr">
+				<trim prefix="OR">
+					<choose>
+						<when test="type=='S'.toString()">
+							salename like '%'||#{keyword}||'%'
+						</when>
+						<when test="type=='C'.toString()">
+							catename like '%'||#{keyword}||'%'
+						</when>
+					</choose>
+				</trim>
+			</foreach>
+		</trim>
+	</sql>
+	<sql id="rvcriteria">
+		<trim prefix="(" suffix=") AND" prefixOverrides="OR">
+			<foreach item="type" collection="typeArr">
+				<trim prefix="OR">
+					<choose>
+						<when test="type=='S'.toString()">
+							s.saleno like '%'||#{keyword}||'%'
+						</when>
+					</choose>
+				</trim>
+			</foreach>
+		</trim>
+	</sql>
+	<resultMap type="kr.icia.domain.SaleVO" id="saleMap">
+		<id property="saleno" column="saleno"/>
+		<result property="saleno" column="saleno"/>
+		<result property="saleName" column="salename"/>
+		<result property="cost" column="cost"/>
+		<result property="content" column="content"/>
+		<result property="amount" column="amount"/>
+		<result property="good" column="good"/>
+		<result property="updateDate" column="updatedate"/>
+		<collection property="cate" resultMap="cateMap"/>
+		<collection property="attachImage" resultMap="imageMap"/>
+	</resultMap>
+	<resultMap type="kr.icia.domain.SaleImageVO" id="imageMap">
+		<result property="uuid" column="uuid"/>
+		<result property="fileName" column="filename"/>
+		<result property="imagePath" column="imagepath"/>
+		<result property="saleno" column="saleno"/>
+	</resultMap>
+	<resultMap type="kr.icia.domain.CateVO" id="cateMap">
+		<result property="cateno" column="cateno"/>
+		<result property="cateName" column="catename"/>
+	</resultMap>
+	<resultMap type="kr.icia.domain.BoardRvVO" id="reviewMap">
+		<id property="bno" column="bno" />
+		<result property="bno" column="bno" />
+		<result property="saleno" column="saleno" />
+		<result property="userid" column="userid" />
+		<result property="title" column="title" />
+		<result property="content" column="content" />
+		<result property="updateDate" column="updatedate" />
+		<result property="views" column="views" />
+		<result property="good" column="good" />
+		<collection property="attachImage" resultMap="bimageMap" />
+	</resultMap>
+
+	<resultMap type="kr.icia.domain.BoardImageVO" id="bimageMap">
+		<result property="uuid" column="uuid" />
+		<result property="fileName" column="filename" />
+		<result property="imagePath" column="imagepath" />
+		<result property="bno" column="bno" />
+	</resultMap>
+	<select id="getCate" resultType="kr.icia.domain.CateVO">
+		select * from sale_cate
+	</select>
+	<select id="getSaleCount" resultType="int">
+		<![CDATA[
+			select count(*)
+			from 
+			(select /*+index_desc(sale slaeno)*/
+			rownum rn, 
+			s.saleno,
+			salename,
+			cost,
+			content,
+			amount,
+			(select count(*) from sale_good where saleno = s.saleno) as good,
+			s.updatedate,
+			uuid,
+			imagepath,
+			filename,
+			c.catename
+			from sale s,sale_img i,sale_cate c
+			where 
+			s.cateno = c.cateno and
+            i.saleno = s.saleno and 
+		]]>
+		
+		<include refid="criteria"/>
+		
+		<![CDATA[
+			rownum <= #{pageNum} * #{amount})
+			where (rn > (#{pageNum}-1) * #{amount})
+		]]>
+	</select>
+	<select id="getCount" resultType="int">
+		select count(*) from sale where
+		
+		<include refid="criteria"/>
+	 	
+	 	<![CDATA[
+	 		saleno > 0 and 
+	 		cateno = #{cateno}
+	 	]]>
+	</select>
+	<insert id="register">
+		insert into sale(saleno,salename,cost,content,amount,cateno) 
+		values(sale_seq.nextval,#{saleName},#{cost},#{content},#{amount},#{cate.cateno})
+	</insert>
+	<select id="getSale" resultMap="saleMap">
+		<![CDATA[
+			select saleno,
+			salename, 
+			cost,
+			content,
+			amount,
+			good,
+			updatedate,
+			uuid,
+			cateno,
+			imagepath,
+			filename,
+			catename 
+			from 
+			(select /*+index_desc(sale slaeno)*/
+			rownum rn, 
+			s.saleno,
+			salename,
+			s.cateno,
+			to_char(cost,'999,999')||'원' cost,
+			content,
+			amount,
+			(select count(*) from sale_good where saleno = s.saleno) as good,
+			s.updatedate,
+			uuid,
+			imagepath,
+			filename,
+			c.catename
+			from sale s,sale_img i,sale_cate c
+			where 
+			s.cateno = c.cateno and
+            i.saleno = s.saleno and 
+		]]>
+		
+		<include refid="criteria"/>
+		
+		<![CDATA[
+			rownum <= #{pageNum} * #{amount})
+			where (rn > (#{pageNum}-1) * #{amount})
+		]]>
+	</select>
+	<select id="getSaleList" parameterType="String" resultMap="saleMap">
+		<![CDATA[
+			select saleno,
+			salename, 
+			cost,
+			content,
+			amount,
+			good,
+			updatedate,
+			uuid,
+			imagepath,
+			filename,
+			catename,
+			cateno 
+			from 
+			(select /*+index_desc(sale slaeno)*/
+			rownum rn, 
+			s.saleno,
+			s.cateno,
+			salename,
+			to_char(cost,'999,999')||'원' cost,
+			content,
+			amount,
+			(select count(*) from sale_good where saleno = s.saleno) as good,
+			s.updatedate,
+			uuid,
+			imagepath,
+			filename,
+			c.catename
+			from sale s,sale_img i,sale_cate c
+			where 
+			s.cateno = c.cateno and 
+            i.saleno = s.saleno and 
+		]]>
+		
+		<include refid="criteria"/>
+		
+		<![CDATA[
+			rownum <= #{pageNum} * #{amount})
+			where (rn > (#{pageNum}-1) * #{amount}) 
+			and cateno = #{cateno}
+		]]>
+	</select>
+	<select id="getSaleInfo" resultMap="saleMap">
+		select s.saleno,
+			salename, 
+			to_char(cost,'999,999')||'원' cost,
+			content,
+			amount,
+			(select count(*) from sale_good where saleno = #{saleno}) as good,
+			s.updatedate,
+			uuid,
+			imagepath,
+			filename,
+			c.catename,
+			s.cateno 
+			from 
+			sale s,sale_img i,sale_cate c
+			where s.cateno = c.cateno and 
+			i.saleno = s.saleno and
+			s.saleno = #{saleno}
+	</select>
+	<select id="getAdminSaleInfo" resultMap="saleMap">
+		select s.saleno,
+			salename, 
+			cost,
+			content,
+			amount,
+			(select count(*) from sale_good where saleno = #{saleno}) as good,
+			s.updatedate,
+			uuid,
+			imagepath,
+			filename,
+			c.catename,
+			s.cateno 
+			from 
+			sale s,sale_img i,sale_cate c
+			where s.cateno = c.cateno and 
+			i.saleno = s.saleno and
+			s.saleno = #{saleno}
+	</select>
+	<update id="updateSale">
+		update sale set 
+		salename = #{saleName},
+		cost = #{cost},
+		content = #{content},
+		updatedate = sysdate,
+		amount = #{amount},
+		cateno = #{cate.cateno}  
+		where 
+		saleno = #{saleno} 
+	</update>
+	<delete id="deleteSale">
+		delete from sale where 
+		saleno = #{saleno}
+	</delete>
+	<select id="getReview" resultMap="reviewMap">
+		select 
+		bno, 
+		userid, 
+		saleno,
+		title, 
+		content, 
+		updatedate, 
+		views, 
+		good, 
+		uuid, 
+		imagepath, 
+		filename
+		from 
+		(select 
+		rownum rn, 
+		r.bno, 
+		r.userid, 
+		s.saleno, 
+		r.title,
+		r.content, 
+		r.updatedate, 
+		r.views, 
+		r.good, 
+		uuid, 
+		imagepath, 
+		filename
+		from 
+		board_rv r, 
+		board_rv_img i, 
+		sale s 
+		where 
+		r.bno = i.bno 
+		and
+		s.saleno = r.saleno 
+		and 		
+		<include refid="rvcriteria" />
+		<![CDATA[		
+		rownum <= #{pageNum} * #{amount})
+		where (rn > (#{pageNum}-1) * #{amount})
+		]]>		 
+	</select>
+	<select id="getRevCount" resultType="int">
+		select count(*) from board_rv r,sale s 
+		where
+		<![CDATA[
+		bno > 0 and
+		r.saleno = s.saleno
+		]]>
+	</select>
+	<select id="getReviewUser" resultMap="reviewMap">
+		select 
+		bno, 
+		userid, 
+		saleno,
+		title, 
+		content, 
+		updatedate, 
+		views, 
+		good, 
+		uuid, 
+		imagepath, 
+		filename
+		from 
+		(select 
+		rownum rn, 
+		r.bno, 
+		r.userid, 
+		s.saleno, 
+		r.title,
+		r.content, 
+		r.updatedate, 
+		r.views, 
+		r.good, 
+		uuid, 
+		imagepath, 
+		filename
+		from 
+		board_rv r, 
+		board_rv_img i, 
+		sale s 
+		where 
+		r.bno = i.bno 
+		and
+		s.saleno = r.saleno 
+		and 		
+		<include refid="rvcriteria" />
+		<![CDATA[		
+		rownum <= #{pageNum} * #{amount})
+		where (rn > (#{pageNum}-1) * #{amount}) and
+		userid = #{userid}
+		]]>		 
+	</select>
+	<select id="getRevCountUser" resultType="int">
+		select count(*) from board_rv r,sale s 
+		where
+		<![CDATA[
+		bno > 0 and
+		r.saleno = s.saleno and
+		userid = #{userid}
+		]]>
+	</select>
+	<insert id="reviewReg">
+		insert into
+		board_rv(bno,saleno,userid,title,content,updatedate)
+		values(board_rv_seq.nextval,#{saleno},#{userid},#{title},#{content},sysdate)
+	</insert>
+	
+</mapper>

@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.icia.mapper.EventMapper">
+	<sql id="criteria">
+		<trim prefix="(" suffix=") AND" prefixOverrides="OR">
+			<foreach item="type" collection="typeArr">
+				<trim prefix="OR">
+					<choose>
+						<when test="type=='T'.toString()">
+							title like '%'||#{keyword}||'%'
+						</when>
+						<when test="type=='C'.toString()">
+							content like '%'||#{keyword}||'%'
+						</when>
+					</choose>
+				</trim>
+			</foreach>
+		</trim>
+		<trim prefix="(" suffix=") AND" prefixOverrides="AND">	
+			<foreach item="time" collection="timeArr">
+				<trim prefix="AND">
+					<choose>
+						<when test="time=='S'.toString()">
+							<![CDATA[
+								sysdate < enddate
+							]]>
+						</when>
+						<when test="time=='E'.toString()">
+							<![CDATA[
+								sysdate > enddate
+							]]> 
+						</when>
+					</choose>
+				</trim>
+			</foreach>
+		</trim>
+	</sql>
+	<resultMap type="kr.icia.domain.BoardEventVO" id="eventMap">
+		<id property="bno" column="bno" />
+		<result property="bno" column="bno" />
+		<result property="userid" column="userid" />
+		<result property="title" column="title" />
+		<result property="sub" column="sub"/>
+		<result property="content" column="content" />
+		<result property="updateDate" column="updatedate" />
+		<result property="endDate" column="enddate" />
+		<result property="good" column="good" />
+		<collection property="attachImage" resultMap="imageMap" />
+	</resultMap>
+	<resultMap type="kr.icia.domain.BoardImageVO" id="imageMap">
+		<result property="uuid" column="uuid" />
+		<result property="fileName" column="filename" />
+		<result property="imagePath" column="imagepath" />
+		<result property="bno" column="bno" />
+	</resultMap>
+	<insert id="register">
+		insert into board_ev(bno, userid, title, sub, content, enddate)
+		values(board_ev_seq.nextval, #{userid}, #{title}, #{sub}, #{content} ,#{endDate})
+	</insert>
+	<select id="getEvent" resultMap="eventMap">
+		select 
+			bno,
+			userid,
+			title,
+			sub,
+			content,
+			updatedate,
+			enddate,
+			good,
+			uuid,
+			imagepath,
+			filename
+			from 
+			(select 
+			rownum rn,
+			b.bno,
+			b.userid,
+			title,
+			sub,
+			content,
+			updatedate,
+			enddate,
+			good,
+			uuid,
+			imagepath,
+			filename 
+			from 
+			board_ev b,
+			board_ev_img i
+			where b.bno = i.bno 
+			and
+		<include refid="criteria"/>
+	 	
+	 	<![CDATA[
+	 		rownum <= #{pageNum} * #{amount})
+	 		where (rn > (#{pageNum}-1) * #{amount})
+	 		
+	 	]]>
+	</select>
+	<select id="getEventCount" resultType="int">
+		select count(*) from board_ev where
+	 	
+	 	<include refid="criteria"/>
+	 	
+	 	<![CDATA[
+	 		bno > 0
+	 	]]>
+	</select>
+	<select id="getEventInfo" resultMap="eventMap">
+		select 
+			bno,
+			userid,
+			title,
+			sub,
+			content,
+			updatedate,
+			enddate,
+			good
+			from
+			board_ev 
+			where 
+			bno = #{bno}
+	</select>
+	<update id="update">
+		update board_ev set title=#{title},content=#{content},enddate=#{endDate} where bno = #{bno}
+	</update>
+	<delete id="delete">
+		delete from board_ev where bno = #{bno}
+	</delete>
+</mapper>

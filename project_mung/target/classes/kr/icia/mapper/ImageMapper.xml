@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.icia.mapper.ImageMapper">
+	<select id="checkBoardImg" resultType="String">
+		select bno from board_img where bno = #{bno}
+	</select>
+	<insert id="insert">
+		<selectKey keyProperty="saleno" order="BEFORE" resultType="int">
+			select max(saleno) as saleno from sale
+		</selectKey>
+		insert into sale_img(uuid,imagepath,filename,saleno) 
+		values(#{uuid},#{imagePath},#{fileName},#{saleno})
+	</insert>
+	<delete id="delete">
+		delete from sale_img where uuid=#{uuid}
+	</delete>
+	<delete id="removeSaleImage">
+		delete from sale_img 
+		where saleno = #{saleno}
+	</delete>
+	<delete id="removeEvent">
+		delete from board_ev_img
+		where bno = #{bno}
+	</delete>
+	<delete id="deleteUser">
+		delete from member_img
+		where userno = #{userno}
+	</delete>
+	<delete id="removeBoard">
+		delete from board_img
+		where bno = #{bno}
+	</delete>
+	<insert id="insertMember">
+		insert into member_img(uuid,imagepath,filename,userno) 
+		select #{uuid},#{imagePath},#{fileName},#{userno} from dual 
+		where not exists 
+		(select 0 
+		from member_img 
+		where userno = #{userno})
+	</insert>
+	<update id="updateMember">
+		update member_img set 
+		uuid = #{uuid},
+		imagepath = #{imagePath},
+		filename = #{fileName} 
+		where userno = #{userno}
+	</update>
+	<update id="updateSale">
+		update sale_img set 
+		uuid = #{uuid},
+		imagepath = #{imagePath},
+		filename = #{fileName} 
+		where saleno = #{saleno}
+	</update>
+	<insert id="insertEvent">
+		<selectKey keyProperty="bno" order="BEFORE" resultType="int">
+			select max(bno) as bno from board_ev
+		</selectKey>
+		insert into board_ev_img(uuid,imagepath,filename,bno) 
+		values(#{uuid},#{imagePath},#{fileName},#{bno})
+	</insert>
+	<insert id="insertDogs">
+		<selectKey keyProperty="dogno" order="BEFORE" resultType="int">
+			select max(dogno) as dogno from dogs
+		</selectKey>
+		insert into dogs_img(uuid,imagepath,filename,dogno) 
+		values(#{uuid},#{imagePath},#{fileName},#{dogno})
+	</insert>
+	<insert id="insertReview">
+		<selectKey keyProperty="bno" order="BEFORE" resultType="int">
+			select max(bno) as bno from board_rv
+		</selectKey>
+		insert into board_rv_img(uuid,imagepath,filename,bno)
+		values(#{uuid},#{imagePath},#{fileName},#{bno})
+	</insert>
+	<!-- 11-11 -->
+	<insert id="insertAfter">
+		<selectKey keyProperty="bno" order="BEFORE" resultType="int">
+			select max(bno) as bno from board
+		</selectKey>
+		insert into board_img(uuid,imagepath,filename,bno)
+		values(#{uuid},#{imagePath},#{fileName},#{bno})
+	</insert>
+</mapper>

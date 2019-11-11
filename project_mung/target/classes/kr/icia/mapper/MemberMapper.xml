@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.icia.mapper.MemberMapper">
+<!-- 
+resultType : 자동으로 설정된 리턴 타입
+resultMap : 수동으로 설정된 리턴 타입
+ -->
+	<sql id="criteria">
+		<trim prefix="(" suffix=") AND" prefixOverrides="OR">
+			<foreach item="type" collection="typeArr">
+				<trim prefix="OR">
+					<choose>
+						<when test="type=='G'.toString()">
+							tear like '%'||#{keyword}||'%'
+						</when>
+						<when test="type=='N'.toString()">
+							username like '%'||#{keyword}||'%'
+						</when>
+						<when test="type=='I'.toString()">
+							m.userid like '%'||#{keyword}||'%'
+						</when>
+						<when test="type=='A'.toString()">
+							addr_2 like '%'||#{keyword}||'%'
+						</when>
+					</choose>
+				</trim>
+			</foreach>
+		</trim>
+	</sql>
+	<resultMap type="kr.icia.domain.MemberVO" id="memberMap">
+		<id property="userid" column="userid"/>
+		<result property="userno" column="userno"/>
+		<result property="userid" column="userid"/>
+		<result property="userpw" column="userpw"/>
+		<result property="userName" column="username"/>
+		<result property="addr_1" column="addr_1"/>
+		<result property="addr_2" column="addr_2"/>
+		<result property="addr_3" column="addr_3"/>
+		<result property="email" column="email"/>
+		<result property="phone" column="phone"/>
+		<result property="birth" column="birth"/>
+		<result property="joinDate" column="joindate"/>
+		<result property="updateDate" column="updatedate"/>
+		<result property="report" column="report"/>
+		<result property="adopt" column="adopt"/>
+		<result property="enabled" column="enabled"/>
+		<collection property="grade" resultMap="gradeMap"/>
+		<collection property="authList" resultMap="authMap"/>
+		<collection property="attachImage" resultMap="imageMap"/>
+	</resultMap>
+	<resultMap type="kr.icia.domain.AuthVO" id="authMap">
+	 	<result property="userid" column="userid"/>
+	 	<result property="auth" column="auth"/>
+	</resultMap>
+	<resultMap type="kr.icia.domain.GradeVO" id="gradeMap">
+	 	<result property="grade" column="grade"/>
+	 	<result property="tear" column="tear"/>
+	</resultMap>
+	<resultMap type="kr.icia.domain.MemberImageVO" id="imageMap">
+		<result property="uuid" column="uuid"/>
+		<result property="fileName" column="filename"/>
+		<result property="imagePath" column="imagepath"/>
+		<result property="userno" column="userno"/>
+	</resultMap>
+	
+	<!-- 회원 정보 테이블과 회원 권환 테이블을 조인하여,
+	1개의 타입으로 회원 관련 정보를 리턴 -->
+	<select id="read" resultMap="memberMap">
+		select 
+		mem.userno,mem.userid,userpw,username,addr_1,addr_2,addr_3,email,phone,to_char(birth,'yyyyMMdd') as birth,joindate,updatedate,report,grade,adopt,enabled,auth,uuid,imagepath,filename 
+		from 
+		member mem,member_auth auth,member_img img
+        where auth.userid(+) = mem.userid
+        and img.userno(+) = mem.userno
+        and mem.userid = #{userid}
+	</select>
+	<!-- 
+	left outer join : 좌 테이블, 우 테이블이 있을 때,
+	좌 테이블을 기준으로 레코드를 추출함,
+	좌 테이블은 모두 추출, 우 테이블은 일치하는 값을 추출함
+	
+	로그인 창에서 입력한 사용자 계정을 넘겨 받아서 일치하는 데이터 검색
+	 -->
+	 <select id="userGetId" resultType="String">
+	 	select userid from member 
+	 	where username = #{userName} and 
+	 	email = #{email}
+	 </select>
+	 
+	 <update id="changePw">
+	 	update member set userpw = #{userpw} 
+	 	where userid = #{userid} and 
+	 	userName = #{userName} and 
+	 	email = #{email}
+	 </update>
+	 <update id="changeNewPw">
+	 	update member set userpw = #{userpw}
+	 	where userid = #{userid}
+	 </update>
+	 <select id="userIdCheck" resultType="int">
+	 	select count(*) from member where userid = #{userid}	 
+	 </select>
+	 <update id="updateUser">
+	 	update member set 
+	 	birth = #{birth},
+	 	email = #{email},
+	 	phone = #{phone},
+	 	addr_1 = #{addr_1},
+	 	addr_2 = #{addr_2},
+	 	addr_3 = #{addr_3},
+	 	updatedate = sysdate   
+	 	where userno = #{userno}
+	 </update>
+	 <update id="adminUpdateUser">
+	 	update member set 
+	 	enabled = #{enabled},
+	 	report = #{report},
+	 	adopt = #{adopt},
+	 	grade = #{grade.grade},
+	 	updatedate = sysdate  
+	 	where userno = #{userno}
+	 </update>
+	 <update id="updateAdopt">
+	 	update member set adopt = 1 where userid = #{userid}
+	 </update>
+	 <select id="getMemberWithPaging" resultMap="memberMap">
+	 	<![CDATA[
+	 		select userno,  
+	 		grade,
+	 		tear, 
+	 		username, 
+	 		userid, 
+	 		addr_2, 
+	 		phone, 
+	 		joindate, 
+	 		decode(enabled,0,'이메일 인증 대기',1,'정상',2,'정지') as enabled,
+	 		decode(auth,'ROLE_MEMBER','일반계정','ROLE_ADMIN','관리자') as auth,
+	 		report, 
+	 		decode(adopt,0,'무','유') as adopt 
+	 		from 
+	 		(select /*+index_desc(member userno)*/
+	 		rownum rn, 
+	 		userno, 
+	 		tear, 
+	 		username,
+	 		auth, 
+	 		m.grade,
+	 		m.userid, 
+	 		addr_2, 
+	 		phone, joindate, enabled, report, adopt from member m,member_auth a,grade g
+	 		where a.userid = m.userid and 
+	 		m.grade = g.grade and
+	 	]]>
+	 	
+	 	<include refid="criteria"/>
+	 	
+	 	<![CDATA[
+	 		rownum <= #{pageNum} * #{amount})
+	 		where (rn > (#{pageNum}-1) * #{amount})
+	 		
+	 	]]>
+	 </select>
+	 <select id="getMemberCount" resultType="int">
+	 	select count(userno) from member m,grade g where m.grade = g.grade and  
+	 	
+	 	<include refid="criteria"/>
+	 	
+	 	<![CDATA[
+	 		userno > 0
+	 	]]>
+	 </select>
+	 <select id="getMember" resultMap="memberMap">
+	 	select userno, 
+	 		m.grade,
+	 		tear, 
+	 		username, 
+	 		userid, 
+	 		addr_1,
+	 		addr_2, 
+	 		addr_3,  
+	 		phone, 
+	 		email,
+	 		to_char(birth,'yyyyMMdd') as birth, 
+	 		joindate, 
+	 		decode(enabled,0,'이메일 인증 대기',1,'정상',2,'정지') as enabled,
+	 		report, 
+	 		decode(adopt,0,'무','유') as adopt 
+	 		from 
+	 		member m, grade g
+	 		where m.grade = g.grade and 
+	 		userid = #{userid}
+	 </select>
+	 <select id="getGradeList" resultType="kr.icia.domain.GradeVO">
+	 	select grade,tear from grade
+	 </select>
+	 <select id="getGradeId" resultType="String">
+	 	select m.userid from member m,grade g where m.grade = g.grade and tear = #{tear}
+	 </select>
+	 <delete id="deleteUser">
+	 	delete from member where userid = #{userid}
+	 </delete>
+</mapper>

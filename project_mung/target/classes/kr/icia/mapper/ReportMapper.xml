@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.icia.mapper.ReportMapper">
+ 	<sql id="criteria">
+		<trim prefix="(" suffix=") AND" prefixOverrides="OR">
+			<foreach item="type" collection="typeArr">
+				<trim prefix="OR">
+					<choose>
+						<when test="type=='C'.toString()">
+							content like '%'||#{keyword}||'%'
+						</when>
+						<when test="type=='U'.toString()">
+							username like '%'||#{keyword}||'%'
+						</when>
+						<when test="type=='R'.toString()">
+							rpuser like '%'||#{keyword}||'%'
+						</when>
+					</choose>
+				</trim>
+			</foreach>
+		</trim>
+	</sql>
+ 	<insert id="insertReport">
+	 	insert into board_rp(bno,userid,rpuser,content) 
+	 	values(board_rp_seq.nextval,#{userid},#{rpuser},#{content})
+ 	</insert>
+ 	<select id="reportList" resultType="kr.icia.domain.ReportVO">
+	 	select bno,userid,rpuser,content 
+	 	from 
+	 	(select rownum rn,bno,userid,rpuser,content from board_rp
+	 	where
+	 	<include refid="criteria"/>
+	 	
+	 	<![CDATA[
+	 		rownum <= #{pageNum} * #{amount})
+	 		where (rn > (#{pageNum}-1) * #{amount})
+	 		
+	 	]]>
+ 	</select> 
+	<select id="reportListCount" resultType="int">
+		select count(bno) from board_rp where
+		
+		<include refid="criteria"/>
+	 	
+	 	<![CDATA[
+	 		bno > 0
+	 	]]>
+	</select>
+	<select id="getReport" resultType="kr.icia.domain.ReportVO">
+		select bno,userid,rpuser,content from board_rp where bno = #{bno}
+	</select>
+ </mapper>

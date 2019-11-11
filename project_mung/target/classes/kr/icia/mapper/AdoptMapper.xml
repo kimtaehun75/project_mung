@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.icia.mapper.AdoptMapper">
+	<sql id="criteria">
+			<trim prefix="(" suffix=") AND" prefixOverrides="OR">
+				<foreach item="type" collection="typeArr">
+					<trim prefix="OR">
+						<choose>
+							<when test="type=='N'.toString()">
+								c.cpname like '%'||#{keyword}||'%'
+							</when>
+							<when test="type=='C'.toString()">
+								c.cpcontent like '%'||#{keyword}||'%'
+							</when>
+							<when test="type=='M'.toString()">
+								c.value like '%'||#{keyword}||'%'
+							</when>
+							<when test="type=='I'.toString()">
+								userid like '%'||#{keyword}||'%'
+							</when>
+						</choose>
+					</trim>
+				</foreach>
+			</trim>
+		</sql>
+		<sql id="afterCriteria">
+		<trim prefix="(" suffix=") AND " prefixOverrides="OR">
+			<foreach item="type" collection="typeArr">
+				<trim prefix="OR">
+					<choose>
+						<when test="type=='T'.toString()">
+							title like '%'||#{keyword}||'%'
+						</when>
+						<when test="type=='C'.toString()">
+							content like '%'||#{keyword}||'%'
+						</when>
+						<when test="type=='W'.toString()">
+							userid like '%'||#{keyword}||'%'
+						</when>
+					</choose>
+				</trim>
+			</foreach>
+		</trim>
+	</sql>
+	<resultMap type="kr.icia.domain.AdoptVO" id="adoptMap">
+		<id property="bno" column="bno"/>
+		<result property="bno" column="bno"/>
+		<result property="dogno" column="dogno"/>
+		<result property="userid" column="userid"/>
+		<result property="userName" column="userName"/>
+		<result property="phone" column="phone"/>
+		<result property="addr_1" column="addr_1"/>
+		<result property="addr_2" column="addr_2"/>
+		<result property="addr_3" column="addr_3"/>
+		<result property="reason" column="reason"/>
+		<result property="adopt" column="adopt" />
+		<collection property="attachImage" resultMap="imageMap"/>
+	</resultMap>
+	<resultMap type="kr.icia.domain.DogsVO" id="dogsMap">
+		<id property="dogno" column="dogno" />
+		<result property="dogno" column="dogno" />
+		<result property="userid" column="userid" />
+		<result property="dogName" column="dogName" />
+		<result property="kind" column="kind" />
+		<result property="age" column="age" />
+		<result property="pre" column="pre" />
+		<result property="gender" column="gender" />
+		<result property="detail" column="detail" />
+		<result property="updateDate" column="updateDate" />
+		<result property="apprDate" column="apprDate" />
+		<result property="sellDate" column="sellDate" />
+		<result property="adopt" column="adopt" />
+		<collection property="attachImage" resultMap="imageMap" />
+	</resultMap>
+	<resultMap type="kr.icia.domain.DogsImageVO" id="imageMap">
+			<result property="uuid" column="uuid" />
+			<result property="fileName" column="filename" />
+			<result property="imagePath" column="imagepath" />
+			<result property="dogno" column="dogno" />
+	</resultMap>
+	<resultMap type="kr.icia.domain.BoardVO" id="boardMap">
+		<id property="bno" column="bno" />
+		<result property="bno" column="bno" />
+		<result property="userid" column="userid" />
+		<result property="grade" column="grade"/>
+		<result property="tear" column="tear"/>
+		<result property="title" column="title" />
+		<result property="content" column="content" />
+		<result property="updateDate" column="updatedate" />
+		<result property="views" column="views" />
+		<collection property="attachImage" resultMap="BimageMap" />
+	</resultMap>
+	<resultMap type="kr.icia.domain.BoardImageVO" id="BimageMap">
+		<result property="uuid" column="uuid" />
+		<result property="fileName" column="filename" />
+		<result property="imagePath" column="imagepath" />
+		<result property="bno" column="bno" />
+	</resultMap>
+	<!-- 유기견 등록하기 -->
+	<insert id="register" >
+		insert into dogs(dogno, userid, dogname, kind, age, pre, gender, detail )
+		values (dogs_seq.nextval, #{userid}, #{dogName}, #{kind}, #{age}, #{pre}, #{gender}, #{detail} )
+	</insert>
+	<!-- 유기견 등록하기 끝 -->
+	
+	<!-- 유기견 불러오기 -->
+	<select id="getDogsList" resultMap="dogsMap">
+	   select 
+	   d.dogno, 
+	   d.userid, 
+	   dogname, 
+	   kind, 
+	   age, 
+	   pre, 
+	   decode(gender, '1', '수컷', '2', '암컷') gender,
+	   detail, 
+	   updatedate, 
+	   decode(adopt, '0', '등록 대기', '1', '분양 등록중', '2' , '분양 완료') adopt ,
+	   uuid,
+	   imagePath,
+	   filename
+	   from 
+	   dogs d, 
+	   dogs_img i
+	   where 
+	   d.dogno = i.dogno and
+	   d.dogno > 0
+	   order by d.dogno desc
+	</select>
+	<!-- 유기견 불러오기 끝 -->
+
+	
+	<!-- 유기견 개인등록 관리자 읽기 -->
+	<select id="getDogs" resultType="kr.icia.domain.DogsVO">
+	   select 
+	   dogno,
+	   dogname, 
+	   userid, 
+	   kind, 
+	   age, 
+	   pre, 
+	   detail, 
+	   decode(gender, '1', '수컷', '2', '암컷') gender,
+	   decode(adopt, '0', '등록 대기', '1', '분양 등록중', '2' , '분양 완료') adopt 
+	   from 
+	   dogs  
+	   where dogno = #{dogno}
+	</select>
+	
+	<!-- 유기견 관리자 등록 -->
+	<update id="update">
+		update dogs 
+		set 
+		apprdate = sysdate,
+		adopt = 1 
+		where dogno = ${dogno}
+	</update>
+	<select id="getDogsUserList" resultMap="dogsMap">
+		select 
+		d.dogno, 
+		d.userid, 
+		dogname, 
+		kind, 
+		age, 
+		pre, 
+		decode(gender, '1', '수컷', '2', '암컷') gender,
+		detail, 
+		updatedate, 
+		adopt,
+		uuid,
+		imagePath,
+		filename
+		from 
+		dogs d, 
+		dogs_img i
+		where 
+		d.dogno = i.dogno and
+		adopt = 1 and
+		d.dogno > 0
+		order by d.dogno desc
+	</select>
+	<select id="getDogProfile" resultMap="dogsMap">
+			select 
+			d.dogno,
+			dogname, 
+			kind, 
+			age, 
+			pre, 
+			decode(gender, '1', '수컷', '2', '암컷') gender,
+			detail,
+			uuid,
+			imagePath,
+			filename 
+			from 
+			dogs d,
+			dogs_img i
+			where 
+			d.dogno = i.dogno and
+			d.dogno = #{dogno}
+	</select>
+	<select id="getMember" resultType="kr.icia.domain.MemberVO">
+		select 
+		userid,
+		userName,
+		addr_1,
+		addr_2,
+		addr_3,
+		phone
+		from member
+		where userid = #{userid}
+	
+	</select>
+	<insert id="getRequest">
+		
+		insert into dogs_adopt(bno, dogno, userid, userName, phone, addr_1, addr_2, addr_3, reason)
+		values (dogno_adopt_seq.nextval, #{dogno}, #{userid}, #{userName}, #{phone}, #{addr_1}, #{addr_2}, #{addr_3}, #{reason})
+	
+	</insert>
+	<select id="getRequestList" resultMap="adoptMap">
+		select 
+		bno,
+		a.dogno, 
+		a.userid, 
+		dogname, 
+		phone,
+		addr_1, 
+		addr_2, 
+		addr_3,
+		uuid,
+		imagePath,
+		filename
+		from 
+		dogs_adopt a, 
+		dogs_img i,
+		dogs d
+		where 
+		a.dogno = i.dogno and
+		a.adopt = 0 and
+		bno > 0 
+		order by bno desc
+	</select>
+	<update id="adopt">
+	update dogs
+	set adopt = 2,
+	selldate = sysdate 
+	where dogno = #{dogno}
+	</update>
+	<update id="adoptUser">
+		update dogs_adopt 
+		set adopt = 1 
+		where dogno = #{dogno}
+	</update>
+	<select id="getRequestUser" resultType="kr.icia.domain.AdoptVO">
+		   select
+		   d.dogno,
+		   a.bno,
+		   a.userid,
+		   a.userName,
+		   phone,
+		   addr_1,
+		   addr_2,
+		   addr_3,
+		   reason
+		   from
+		   dogs d,
+		   dogs_adopt a
+		   where
+		   d.dogno = a.dogno
+		   and bno = #{bno}
+		   order by bno desc
+	</select>
+	<!-- 11-04 후기 및 관리 등록-->
+	<insert id="insertAfter">
+		insert into board(bno,userid,title,content,type)
+		values(board_seq.nextval,#{userid},#{title},#{content},1)
+	</insert>
+	<!-- 11-04 후기 및 관리 -->
+	<select id="afterCount" resultType="int">
+		select count(bno) from board where 
+		
+		<include refid="afterCriteria"/>
+		
+		<![CDATA[
+			bno > 0 and type = 1
+		]]>
+	</select>
+	<!-- 11-04 후기 및 관리 리스트 -->
+	<select id="afterList" resultMap="boardMap">
+		select 
+		bno,
+		userid,
+		title,
+		content,
+		updatedate,
+		views,
+		imagepath,
+		uuid,
+		filename
+		from
+		(select 
+		rownum rn,
+		b.bno,
+		userid,
+		title,
+		content,
+		updatedate,
+		views,
+		filename,
+		uuid,
+		imagepath,
+		b.type
+		from 
+		board b,
+		board_img i
+		where
+		b.bno = i.bno and
+		<include refid="afterCriteria"/>
+		
+		<![CDATA[
+			rownum <= #{pageNum} * #{amount}
+			order by bno desc)
+	 		where (rn > (#{pageNum}-1) * #{amount}) and
+	 		type = 1 
+	 		
+		]]>
+	</select>
+	<!-- 11-04 후기 및 관리 조회수 -->
+	<update id="updateView">
+		update board set views = (views+1) where bno = #{bno}
+	</update>
+	<!-- 11-04 후기 및 관리 리스트 -->
+	<select id="getAfter" resultType="kr.icia.domain.BoardVO">
+		select * from board where bno = #{bno} 
+	</select>
+
+<!-- 11-04 후기 검색 -->
+	
+</mapper>

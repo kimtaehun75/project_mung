@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.icia.mapper.MailMapper">
+ 	<insert id="createUser">
+  		insert into member(userno,userid,userpw,username,addr_1,addr_2,addr_3,email,phone,birth) 
+  		values(member_seq.nextval,#{userid},#{userpw},#{userName},#{addr_1},#{addr_2},#{addr_3},#{email},#{phone},#{birth})
+  	</insert>
+  	<insert id="createAuthKey">
+		insert into email_auth(email,authkey) values(#{email},#{authKey})
+	</insert>
+	<update id="userAuth">
+		<![CDATA[
+		update member set enabled = 1,updatedate = sysdate where 
+		(select count(*) from email_auth 
+		where email = #{email} and authkey = #{authKey}) > 0 
+		and email = #{email}
+		]]>
+	</update>
+	<insert id="createAuth">
+		insert into member_auth(userid,auth) values(#{userid},'ROLE_MEMBER')
+	</insert>
+	<delete id="deleteUserAuth">
+		delete from member_auth where userid = #{userid}
+	</delete>
+ </mapper>

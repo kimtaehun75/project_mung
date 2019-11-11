@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+	
+	<bean id="bcryptPasswordEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"/>
+	<!-- 암호화처리 -->
+	<bean id="customUserDetailsService" class="kr.icia.security.CustomUserDetailsService"/>
+	<!-- 로그인 실패 처리 -->
+	<bean id="userAuthProvider" class="kr.icia.security.CustomAuthenticationProvider"/>
+	<!-- 인증 처리 -->
+	<bean id="loginFailureHandler" class="kr.icia.security.domain.LoginFailureHandler">
+		<property name="loginIdName" value="loginId"/>
+		<property name="loginPwName" value="loginPw"/>
+		<property name="errorMsgName" value="errorMsg"/>
+		<property name="defaultFailureUrl" value="/userlogin?errorMsg"/>
+	</bean>
+	<!-- 사용자 계정 정보 처리 -->
+	
+	<!-- 시큐리티 관리 -->
+	<security:authentication-manager>
+		<security:authentication-provider ref="userAuthProvider"/>
+		<security:authentication-provider
+		user-service-ref="customUserDetailsService">
+			<security:password-encoder ref="bcryptPasswordEncoder"/>
+		</security:authentication-provider>
+	</security:authentication-manager>
+	
+	<security:http auto-config="true">
+		<!-- <security:intercept-url 
+		pattern="/board/list"
+		access="permitAll"/>
+	
+		<security:intercept-url 
+		pattern="/download"
+		access="hasRole('ROLE_MEMBER')"/> -->
+		
+		<security:headers>
+        	<security:frame-options disabled="true" />
+        </security:headers>
+		
+		<security:intercept-url
+		pattern="/admin/*/*"
+		access="hasRole('ROLE_ADMIN')"/>
+		
+		<security:intercept-url
+		pattern="/admin/*"
+		access="hasRole('ROLE_ADMIN')"/>
+		<!-- URL 접근이 왔을 때, 지정된 패턴의 주소라면 스프링 스큐리티가 
+		가로채서 사용자 권환을 확인한 후 허용하거나 거부함. -->
+		
+		<security:form-login 
+		username-parameter="loginId"
+		password-parameter="loginPw"
+		login-page="/userlogin"
+		authentication-failure-handler-ref="loginFailureHandler"
+		/>
+		
+		
+		
+		<security:remember-me 
+		data-source-ref="dataSource"
+		token-validity-seconds="604800"/>
+		<!-- 쿠키를 이용하여 자동로그인 
+		60만 4800초 동안 유지(7일간 유지)-->
+		
+		<security:logout
+		logout-url="/userlogout"
+		invalidate-session="true"
+		delete-cookies="remember-me,JSESSIONID"/>	
+	</security:http>
+	
+	
+</beans>

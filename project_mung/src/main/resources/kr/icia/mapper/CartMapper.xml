@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.icia.mapper.CartMapper">
+ 	<resultMap type="kr.icia.domain.SaleImageVO" id="imageMap">
+		<result property="uuid" column="uuid"/>
+		<result property="fileName" column="filename"/>
+		<result property="imagePath" column="imagepath"/>
+		<result property="saleno" column="saleno"/>
+	</resultMap>
+	<resultMap type="kr.icia.domain.CartListVO" id="cartMap">
+		<id property="saleno" column="saleno"/>
+		<result property="saleno" column="saleno"/>
+		<result property="saleName" column="salename"/>
+		<result property="cost" column="cost"/>
+		<result property="amount" column="amount"/>
+		<result property="allCost" column="allcost"/>
+		<collection property="attachImage" resultMap="imageMap"/>
+	</resultMap>
+ 	<select id="getCartCount" resultType="String">
+ 		select count(*) from sale_cart where userid = #{userid}
+ 	</select>
+ 	<insert id="insertMainCart">
+ 		insert into sale_cart 
+	    select #{userid},#{saleno},#{amount} from dual 
+	    where not exists 
+	    (select 0 from sale_cart 
+	    where userid = #{userid} and 
+	    saleno = #{saleno})
+ 	</insert>
+ 	<select id="getCartList" resultMap="cartMap">
+ 		<![CDATA[
+	 		select 
+	 		saleno,
+	 		saleName,
+	 		cost,
+	 		amount,
+	 		allcost,
+	 		uuid,
+	 		imagepath,
+	 		filename 
+	 		from
+	 		(select /*+index_desc(sale saleno)*/
+	 		rownum rn,
+	 		s.saleno,
+			salename,
+			to_char(cost,'999,999')||'원' cost,
+			to_char((c.amount*s.cost),'999,999')||'원' as allcost,
+			c.amount,
+			uuid,
+			imagepath,
+			filename
+			from 
+			sale s,sale_img i,sale_cart c
+			where 
+			s.saleno = i.saleno and 
+			c.saleno = s.saleno and 
+			userid = #{userid})
+		]]>
+ 	</select>
+ 	<delete id="deleteCart">
+ 		delete from sale_cart 
+ 		where saleno = #{saleno} and userid = #{userid}
+ 	</delete>
+ 	<delete id="removeCart">
+ 		delete from sale_cart 
+ 		where saleno= #{saleno}
+ 	</delete>
+ 	<select id="allCartCost" resultMap="cartMap">
+ 		select ltrim(to_char(sum(cost),'L999,999')) as cost from sale_cart c,sale s 
+		where c.saleno = s.saleno
+		group by userid
+        having userid = #{userid}
+ 	</select>
+ 	<select id="checkCart" resultType="String">
+ 		select count(*) from sale_cart where userid = #{userid} and saleno = #{saleno}
+ 	</select>
+ 	<delete id="deleteUser">
+ 		delete from sale_cart where userid = #{userid}
+ 	</delete>
+ 	<select id="allCartCost2" resultMap="cartMap">
+ 		select sum(cost) as cost from sale_cart c,sale s 
+		where c.saleno = s.saleno
+		group by userid
+        having userid = #{userid}
+ 	</select>
+ </mapper>

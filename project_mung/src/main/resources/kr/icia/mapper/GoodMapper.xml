@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.icia.mapper.GoodMapper">
+ 	<select id="checkGood" resultType="String">
+ 	select count(*) from sale_good where 
+ 	userid = #{userid} and saleno = #{saleno}
+ 	</select>
+ 	<insert id="insertGood">
+ 		insert into sale_good 
+	    select #{saleno},#{userid} from dual 
+	    where not exists 
+	    (select 0 from sale_good
+	    where userid = #{userid} and 
+	    saleno = #{saleno})
+ 	</insert>
+ 	<delete id="deleteGood">
+ 		delete from sale_good 
+ 		where userid = #{userid} and saleno = #{saleno} 
+ 	</delete>
+ 	<delete id="removeGood">
+ 		delete from sale_good 
+ 		where saleno = #{saleno}
+ 	</delete>
+ 	<delete id="deleteUser">
+ 		delete from sale_good 
+ 		where userid = #{userid}
+ 	</delete>
+ </mapper>
