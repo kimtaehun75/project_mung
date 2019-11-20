@@ -1,5 +1,7 @@
 package kr.icia.service;
 
+import javax.mail.internet.MimeMessage;
+
 import kr.icia.domain.MemberVO;
 
 public interface MailService {

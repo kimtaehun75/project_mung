@@ -22,19 +22,31 @@ fmt : formatter 형식 맞춰서 표시 -->
     				<p>
 					${sale.content}
 					</p>
+					<c:if test="${sale.amount > 0 }">
+						<p>
+						EA : ${sale.amount} 개
+						</p>
+					</c:if>
+					<c:if test="${sale.amount < 1 }">
+						<p>
+						재고 없음
+						</p>
+					</c:if>
 				<div class="row mt-4">
-							<div class="w-100"></div>
+							<div class="w-100">
+							</div>
 							<div class="input-group col-md-6 d-flex mb-3">
 	             	<span class="input-group-btn mr-2">
 	                	<button type="button" class="quantity-left-minus btn"  data-type="minus" data-field="">
 	                   <i class="ion-ios-remove"></i>
 	                	</button>
-	            		</span>
+	            	</span>
 	             	<input type="text" id="quantity" name="amount" class="form-control input-number" value="1" min="1" max="100">
 	             	<span class="input-group-btn ml-2">
-	                	<button type="button" class="quantity-right-plus btn" data-type="plus" data-field="">
+					<button type="button" class="quantity-right-plus btn" data-type="plus" data-field="">
 	                     <i class="ion-ios-add"></i>
-	                 </button>
+					</button>
+					&nbsp;&nbsp;&nbsp;<i class="ion-ios-heart" style="color:red;"></i>${sale.good}
 	             	</span>
 	          	</div>
 	          	<div class="w-100"></div>
@@ -45,8 +57,10 @@ fmt : formatter 형식 맞춰서 표시 -->
           	<br>
           	<br>
           	<br>
+          	<c:if test="${sale.amount > 0}">
           	<p><a href="${sale.saleno}" class="btn btn-black py-3 px-5" id="cart">장바구니</a></p>
           	<p><a href="${sale.saleno }" class="btn btn-black py-3 px-5" id="buy">구매하기</a></p>
+          	</c:if>
     			</div>
     		</div>
     		</div>

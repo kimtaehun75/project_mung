@@ -165,10 +165,7 @@ fmt : formatter 형식 맞춰서 표시 -->
 				<br>				
 				<table class="table table-bordered" id="dataTable" style="width:100%; cellspacing:0;">						
 					<tr>
-						<th style="width:10%;">
-							글번호
-						</th>
-						<th style="width:10%;" colspan="2">
+						<th style="width:15%;" colspan="2">
 							작성자
 						</th>
 						<th style="width:50%;">
@@ -177,16 +174,13 @@ fmt : formatter 형식 맞춰서 표시 -->
 						<th style="width:20%;">
 							날짜
 						</th>
-						<th style="width:10%;">
+						<th style="width:15%;">
 							조회수
 						</th>
 					</tr>					
 					<tbody>
 					<c:forEach var="free" items="${free}">
 						<tr>					
-							<td>
-								${free.bno }
-							</td>
 							<td>
 								<c:if test="${free.tear == '브론즈'}">
 									<img src="/resources/images/브론즈.png" height=30 width=30>
@@ -200,7 +194,7 @@ fmt : formatter 형식 맞춰서 표시 -->
 								<c:if test="${free.tear == '플래티넘'}">
 									<img src="/resources/images/플래티넘.png" height=30 width=30>
 								</c:if>
-								<c:if test="${free.tear == '다이아'}">
+								<c:if test="${free.tear == '다이아몬드'}">
 									<img src="/resources/images/다이아.png" height=30 width=30>
 								</c:if>
 								<c:if test="${free.tear == '마스터'}">
@@ -208,7 +202,12 @@ fmt : formatter 형식 맞춰서 표시 -->
 								</c:if>
 							</td>
 							<td>
-								${free.userid }
+								<c:if test="${free.auth == 'ROLE_MEMBER' }">
+									${free.userid }
+								</c:if>
+								<c:if test="${free.auth == 'ROLE_ADMIN' }">
+									관리자
+								</c:if>
 							</td>
 							<td>						
 								<a href="./info?bno=${free.bno}" class="">${free.title}</a>							

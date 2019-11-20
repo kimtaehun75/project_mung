@@ -83,4 +83,9 @@
 		insert into board_img(uuid,imagepath,filename,bno)
 		values(#{uuid},#{imagePath},#{fileName},#{bno})
 	</insert>
+	<select id="checkUserno" resultType="int">
+		select i.userno from member m,member_img i
+		where m.userno = i.userno and
+		userid = #{userid}
+	</select>
 </mapper>

@@ -2,7 +2,6 @@ package kr.icia.controller;
 
 import java.security.Principal;
 
-import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,12 +10,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import kr.icia.domain.CouponVO;
-import kr.icia.domain.Criteria;
 import kr.icia.domain.OrderSaleVO;
-import kr.icia.domain.PageDTO;
 import kr.icia.mapper.CartMapper;
-import kr.icia.mapper.EventMapper;
 import kr.icia.service.CouponService;
+import kr.icia.service.MemberService;
 import kr.icia.service.OrderService;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j;
@@ -32,9 +29,12 @@ public class HomeController {
 	
 	private CouponService Sservice;
 	
+	private MemberService mService;
+	
 	@RequestMapping(value = "/", method = RequestMethod.GET)
 	public String home(Model model) {
-
+		
+			
 		return "home";
 	}
 	

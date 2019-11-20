@@ -11,11 +11,14 @@ public interface ImageMapper {
 	public void insert(SaleImageVO vo);
 	public void delete(String uuid);
 	public void deleteUser(int userno);
+	public void removeUser(String userid);
 	public void insertEvent(BoardImageVO vo);
 	public void insertMember(MemberImageVO vo);
 	public int updateMember(MemberImageVO vo);
 	public int updateSale(SaleImageVO vo);
 	public void insertDogs(DogsImageVO vo);
+	
+	public int checkUserno(String userid);
 	
 	public void removeSaleImage(int saleno);
 	public void removeEvent(int bno);

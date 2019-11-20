@@ -92,7 +92,7 @@
 		</div>
 		<div class="form-group">
 			<label for="report">신고 당한 횟수</label> 
-			<input type="text" name="report" id="report" value="${member.report}">
+			<input type="text" name="report" id="report" value="${member.report}" readonly>
 		</div>
 		<div class="form-group">
 			<label for="adopt">분양 유무</label> 

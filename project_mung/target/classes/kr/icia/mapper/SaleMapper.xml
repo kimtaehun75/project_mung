@@ -9,10 +9,10 @@
 				<trim prefix="OR">
 					<choose>
 						<when test="type=='S'.toString()">
-							salename like '%'||#{keyword}||'%'
+							s.salename like '%'||#{keyword}||'%'
 						</when>
 						<when test="type=='C'.toString()">
-							catename like '%'||#{keyword}||'%'
+							c.catename like '%'||#{keyword}||'%'
 						</when>
 					</choose>
 				</trim>
@@ -107,13 +107,22 @@
 		]]>
 	</select>
 	<select id="getCount" resultType="int">
-		select count(*) from sale where
-		
+		select count(*) from sale s,sale_cate c where
+		s.cateno=c.cateno and
 		<include refid="criteria"/>
 	 	
 	 	<![CDATA[
 	 		saleno > 0 and 
-	 		cateno = #{cateno}
+	 		s.cateno = #{cateno}
+	 	]]>
+	</select>
+	<select id="getCountNoneCate" resultType="int">
+		select count(*) from sale s,sale_cate c where
+		s.cateno=c.cateno and
+		<include refid="criteria"/>
+	 	
+	 	<![CDATA[
+	 		saleno > 0 
 	 	]]>
 	</select>
 	<insert id="register">
@@ -365,5 +374,7 @@
 		board_rv(bno,saleno,userid,title,content,updatedate)
 		values(board_rv_seq.nextval,#{saleno},#{userid},#{title},#{content},sysdate)
 	</insert>
-	
+	<update id="updateAmount">
+		update sale set amount = amount-#{amount} where saleno = #{saleno} and amount > 0 and amount >= #{amount}
+	</update>
 </mapper>

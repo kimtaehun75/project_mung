@@ -10,7 +10,7 @@ public class ReplyVO {
 	private int rno;
 	private String reply;
 	private String userid;
-	
+	private String auth;
 	private Date updateDate;
 	private Date replyDate;
 }

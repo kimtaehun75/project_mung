@@ -100,12 +100,17 @@
 	 	]]>
 	</select>
 	<select id="getEventCount" resultType="int">
-		select count(*) from board_ev where
-	 	
+		select count(*) from 
+		(select
+		rownum rn 
+		from board_ev b,board_ev_img i where
+		b.bno = i.bno
+		and
 	 	<include refid="criteria"/>
 	 	
 	 	<![CDATA[
-	 		bno > 0
+	 		rownum <= #{pageNum} * #{amount})
+	 		where (rn > (#{pageNum}-1) * #{amount})
 	 	]]>
 	</select>
 	<select id="getEventInfo" resultMap="eventMap">

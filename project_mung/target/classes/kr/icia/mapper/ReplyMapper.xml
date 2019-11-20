@@ -22,12 +22,12 @@
  	</update>
  	<select id="getListWithPaging" resultType="kr.icia.domain.ReplyVO">
  		<![CDATA[
- 			select rno,bno,reply,userid,replydate,updatedate 
+ 			select rno,bno,auth,reply,userid,replydate,updatedate 
  			from(
  				select /*+index(board_reply rno)*/ 
- 				rownum rn,rno,bno,reply,userid,replydate,updatedate 
- 				from board_reply 
- 				where bno = #{bno} 
+ 				rownum rn,rno,bno,reply,b.userid,replydate,updatedate,auth
+ 				from board_reply b,member_auth a 
+ 				where bno = #{bno} and a.userid = b.userid
  				and rno > 0 
  				and rownum <= #{cri.pageNum} * #{cri.amount}
  			)

@@ -28,7 +28,7 @@ public class FreeController {
 		
 	@GetMapping("/freeboard")
 	public void freeboard(Criteria cri, Model model) {
-		log.info("productList");
+		log.info("freeboard");
 		log.info("list : "+service.boardList(cri));
 		log.info("pageMaker : "+new PageDTO(cri, service.boardCount(cri)));
 		

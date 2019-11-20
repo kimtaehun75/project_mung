@@ -13,8 +13,15 @@
 		<div class="card-body">
 
 			<div class="form-group">
-				작성자<input class="form-control" name="writer" value="${board.userid}"
-					readonly="readonly" style="width: 30%;" />
+				작성자
+				<c:if test="${board.auth eq 'ROLE_MEMBER'}">
+					<input class="form-control" name="userid" value="${board.userid}"
+						readonly="readonly" style="width: 30%;" />
+				</c:if>
+				<c:if test="${board.auth eq 'ROLE_ADMIN'}">
+					<input class="form-control" name="userid" value="관리자"
+						readonly="readonly" style="width: 30%;" />
+				</c:if>
 			</div>
 			<div class="form-group">
 				제목<input class="form-control" name="title" value="${board.title}"
@@ -252,10 +259,17 @@
 								str+="<li class='left ";
 								str+="clearfix' data-rno='";
 								str+=list[i].rno+"'>";
-								str+="<div><div class='header' ";
-								str+="><strong class='";
-								str+="primary-font'>";
-								str+=list[i].userid+"</strong>";
+								str+="<div><div class='header'>";
+								if(list[i].auth == 'ROLE_MEMBER'){
+									str+="<strong class='";
+									str+="primary-font'>";
+									str+=list[i].userid+"</strong>";
+								}
+								if(list[i].auth == 'ROLE_ADMIN'){
+									str+="<strong class='";
+									str+="primary-font'>";
+									str+="관리자"+"</strong>";
+								}
 								if((list[i].userid) == userid){
 									str+="<img style='cursor:pointer;' width=15 height=15 src='http://localhost:8090/resources/images/수정사진.png' id='modifyBtn'>";
 								}

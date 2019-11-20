@@ -69,7 +69,9 @@ resultMap : 수동으로 설정된 리턴 타입
 	1개의 타입으로 회원 관련 정보를 리턴 -->
 	<select id="read" resultMap="memberMap">
 		select 
-		mem.userno,mem.userid,userpw,username,addr_1,addr_2,addr_3,email,phone,to_char(birth,'yyyyMMdd') as birth,joindate,updatedate,report,grade,adopt,enabled,auth,uuid,imagepath,filename 
+		mem.userno,mem.userid,userpw,username,addr_1,addr_2,addr_3,email,phone,to_char(birth,'yyyyMMdd') as birth,joindate,updatedate,
+		(select count(rpuser) from board_rp where rpuser = mem.userid) report,
+		grade,adopt,enabled,auth,uuid,imagepath,filename 
 		from 
 		member mem,member_auth auth,member_img img
         where auth.userid(+) = mem.userid
@@ -149,7 +151,9 @@ resultMap : 수동으로 설정된 리턴 타입
 	 		m.grade,
 	 		m.userid, 
 	 		addr_2, 
-	 		phone, joindate, enabled, report, adopt from member m,member_auth a,grade g
+	 		phone, joindate, enabled,
+	 		(select count(rpuser) from board_rp where rpuser = m.userid) report,
+	 		adopt from member m,member_auth a,grade g
 	 		where a.userid = m.userid and 
 	 		m.grade = g.grade and
 	 	]]>
@@ -185,7 +189,7 @@ resultMap : 수동으로 설정된 리턴 타입
 	 		to_char(birth,'yyyyMMdd') as birth, 
 	 		joindate, 
 	 		decode(enabled,0,'이메일 인증 대기',1,'정상',2,'정지') as enabled,
-	 		report, 
+	 		(select count(rpuser) from board_rp where rpuser = m.userid) report, 
 	 		decode(adopt,0,'무','유') as adopt 
 	 		from 
 	 		member m, grade g

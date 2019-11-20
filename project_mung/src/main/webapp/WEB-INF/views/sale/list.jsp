@@ -194,12 +194,14 @@
                   <div class="bottom-area d-flex px-3">
                      <div class="m-auto d-flex" >
                         <sec:authorize access="isAuthenticated()">
-                           <a href="${sale.saleno}" id="cartBtn${i.index}" class="buy-now d-flex justify-content-center align-items-center mx-1"
-                           style="color:white;">
-                              <span>
-                                 <i class="ion-ios-cart"></i>
-                              </span>
-                           </a>
+                           <c:if test="${sale.amount > 0 }">
+	                           <a href="${sale.saleno}" id="cartBtn${i.index}" class="buy-now d-flex justify-content-center align-items-center mx-1"
+	                           style="color:white;">
+		                              <span>
+		                                 <i class="ion-ios-cart"></i>
+		                              </span>
+	                           </a>
+                           </c:if>
                            <script>
                            $(document).ready(function(){
                               var saleno = '${sale.saleno}';
@@ -265,11 +267,11 @@
                               });
                            });
                            </script> 
-                           <a href="${sale.saleno}" id="goodBtn${i.index}" class="heart d-flex justify-content-center align-items-center ">
-                              <span>
-                                 <i class="ion-ios-heart"></i>
-                              </span>
-                           </a>
+	                           <a href="${sale.saleno}" id="goodBtn${i.index}" class="heart d-flex justify-content-center align-items-center ">
+		                              <span>
+		                                 <i class="ion-ios-heart"></i>
+		                              </span>
+	                           </a>
                            <script>
                            $(document).ready(function(){
                               var saleno = '${sale.saleno}';

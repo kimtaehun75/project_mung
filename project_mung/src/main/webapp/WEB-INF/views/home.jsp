@@ -32,7 +32,7 @@ ul{
 											href="http://localhost:8090/adopt/dogProfile?dogno=4">
 										<!--포메라니안 짜장-->
 										<area shape="rect" coords="14,420,273,679"
-											href="http://localhost:8090/adopt/dogProfile?dogno=9">
+											href="http://localhost:8090/adopt/dogProfile?dogno=5">
 										<!--치와와 엘리스-->
 										<area shape="rect" coords="280,420,539,679"
 											href="http://localhost:8090/adopt/dogProfile?dogno=6">
@@ -46,31 +46,31 @@ ul{
 								</li>
 								<!-- 인기상품 -->
 								<li><img src="resources/images/인기상품.png" border="0"
-									usemap="#map47"></li>
-								<li><map name="map47">
-										<!--포메라니안 호두-->
-										<area shape="rect" coords="15,111,274,370" href="http://localhost:8090/adopt/dogProfile?dogno=1">
-										<!--요크셔테리어 딩동-->
+									usemap="#map100"></li>
+								<li><map name="map100">
+										<!--1-->
+										<area shape="rect" coords="15,111,274,370" href="http://localhost:8090/sale/detail?saleno=7">
+										<!--2-->
 										<area shape="rect" coords="281,111,540,370"
-											href="http://localhost:8090/adopt/dogProfile?dogno=2">
-										<!--치와와 리사-->
+											href="http://localhost:8090/sale/detail?saleno=8">
+										<!--3-->
 										<area shape="rect" coords="546,112,805,371"
-											href="http://localhost:8090/adopt/dogProfile?dogno=3">
-										<!--크림푸들 뿌네-->
+											href="http://localhost:8090/sale/detail?saleno=9">
+										<!--4-->
 										<area shape="rect" coords="812,113,1071,372"
-											href="http://localhost:8090/adopt/dogProfile?dogno=4">
-										<!--포메라니안 짜장-->
+											href="http://localhost:8090/sale/detail?saleno=10">
+										<!--5-->
 										<area shape="rect" coords="14,420,273,679"
-											href="http://localhost:8090/adopt/dogProfile?dogno=9">
-										<!--치와와 엘리스-->
+											href="http://localhost:8090/sale/detail?saleno=11">
+										<!--6-->
 										<area shape="rect" coords="280,420,539,679"
-											href="http://localhost:8090/adopt/dogProfile?dogno=6">
-										<!--말티즈 아로-->
+											href="http://localhost:8090/sale/detail?saleno=12">
+										<!--7-->
 										<area shape="rect" coords="547,419,806,678"
-											href="http://localhost:8090/adopt/dogProfile?dogno=7">
-										<!--화이트푸들 하트-->
+											href="http://localhost:8090/sale/detail?saleno=13">
+										<!--8-->
 										<area shape="rect" coords="811,419,1070,678"
-											href="http://localhost:8090/adopt/dogProfile?dogno=8">
+											href="http://localhost:8090/sale/detail?saleno=14">
 									</map> <!--HAPPY PET TOWN STORE-->
 								</li>
 							</ul>

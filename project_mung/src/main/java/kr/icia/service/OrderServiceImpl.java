@@ -8,7 +8,9 @@ import org.springframework.stereotype.Service;
 
 import kr.icia.domain.OrderInfoVO;
 import kr.icia.domain.OrderSaleVO;
+import kr.icia.domain.SaleVO;
 import kr.icia.mapper.OrderMapper;
+import kr.icia.mapper.SaleMapper;
 import lombok.Setter;
 import lombok.extern.log4j.Log4j;
 
@@ -18,6 +20,9 @@ public class OrderServiceImpl implements OrderService {
 	
 	@Setter(onMethod_=@Autowired)
 	private OrderMapper mapper;
+	
+	@Setter(onMethod_=@Autowired)
+	private SaleMapper sMapper;
 	
 	public void insertOrderSale(OrderSaleVO vo) {
 		
@@ -38,7 +43,15 @@ public class OrderServiceImpl implements OrderService {
 		
 		vo.forEach(order->{
 			order.setOrderno(orderno);
-			mapper.insertOrderList(order);
+			
+			SaleVO sale = new SaleVO();
+			
+			sale.setSaleno(order.getSaleno());
+			sale.setAmount(order.getAmount());
+			
+			if(sMapper.updateAmount(sale) == 1) {
+				mapper.insertOrderList(order);
+			}
 		});
 	}
 
@@ -91,12 +104,14 @@ public class OrderServiceImpl implements OrderService {
 		
 		orderno.forEach(number->{
 			OrderSaleVO vo = new OrderSaleVO();
+			
 			vo = mapper.callOrderList(number);
 			if(vo == null) {
 				vo = mapper.callOrderListNoCp(number);
 			}
 			log.info("vo : "+vo);
 			vo.setOrderList(mapper.callProduct(number));
+			
 			list.add(vo);
 		});
 		

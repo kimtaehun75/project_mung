@@ -141,8 +141,20 @@ a#MOVE_TOP_BTN {
             </a></li>
          </sec:authorize>
          <sec:authorize access="isAuthenticated()">
-            <li class="nav-item"><a class="nav-link">
-                  ${pageContext.request.userPrincipal.name}님 </a></li>
+            <sec:authorize access="hasRole('ROLE_MEMBER')">
+	            <li class="nav-item">
+		            <a class="nav-link">
+		                  ${pageContext.request.userPrincipal.name}님 
+		            </a>
+	            </li>
+            </sec:authorize>
+            <sec:authorize access="hasRole('ROLE_ADMIN')">
+            	<li class="nav-item">
+            		<a class="nav-link">
+            			관리자님
+            		</a>
+            	</li>
+            </sec:authorize>
          </sec:authorize>
          <sec:authorize access="isAnonymous()">
             <li class="nav-item"><a href="/userlogin" class="nav-link">

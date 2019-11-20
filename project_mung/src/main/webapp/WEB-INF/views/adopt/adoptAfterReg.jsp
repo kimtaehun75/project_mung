@@ -3,9 +3,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%><!-- jstl core 쓸때 태그에 c 로 표시. -->
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt"%>
 <%@ include file="../includes/header.jsp"%>
-
 <style type="text/css">
-	body { margin: 10px; }
 	.filebox label {
   display: inline-block;
   padding: .5em .75em;
@@ -38,11 +36,12 @@
             sSkinURI: "../resources/editor/SmartEditor2Skin.html",
             htParams : {
                 // 툴바 사용 여부
+            	
                 bUseToolbar : true,            
                 // 입력창 크기 조절바 사용 여부
-                bUseVerticalResizer : true,    
+                bUseVerticalResizer : true,
                 // 모드 탭(Editor | HTML | TEXT) 사용 여부
-                bUseModeChanger : true
+                bUseModeChanger : true,
             },
             fOnAppLoad : function(){
             	$(document).ready(function(){
@@ -120,39 +119,39 @@
         			});
         			$("#register_Btn").click(function(e){
         				e.preventDefault();
-        				obj.getById["editor"].exec("UPDATE_CONTENTS_FIELD", []);
         				
-        				var fileName = $(".uploadResult ul li").data("filename");
-        				var uuid = $(".uploadResult ul li").data("uuid");
-        				var path = $(".uploadResult ul li").data("path");
-        				var type = $(".uploadResult ul li").data("type");
-        				
-        				path = path.replace(new RegExp(/\\/g),"/");
-        				
-        				var str = "";
-        				str += "<input type='hidden' name='attachImage.fileName'";
-        				str += " value='";
-        				str += fileName;
-        				str += "'/>";
-        				
-        				str += "<input type='hidden' name='attachImage.uuid'";
-        				str += " value='";
-        				str += uuid;
-        				str += "'/>";
-        				
-        				str += "<input type='hidden' name='attachImage.imagePath'";
-        				str += " value='";
-        				str += path;
-        				str += "'/>";
-        				
-        				str += "<input type='hidden' name='attachImage.fileType'";
-        				str += " value='";
-        				str += type;
-        				str += "'/>";
-        				
-        				console.log(str);
-        				formObj.append(str).submit();
-        				
+	        				obj.getById["editor"].exec("UPDATE_CONTENTS_FIELD", []);
+	        				
+	        				var fileName = $(".uploadResult ul li").data("filename");
+	        				var uuid = $(".uploadResult ul li").data("uuid");
+	        				var path = $(".uploadResult ul li").data("path");
+	        				var type = $(".uploadResult ul li").data("type");
+	        				
+	        				path = path.replace(new RegExp(/\\/g),"/");
+	        				
+	        				var str = "";
+	        				str += "<input type='hidden' name='attachImage.fileName'";
+	        				str += " value='";
+	        				str += fileName;
+	        				str += "'/>";
+	        				
+	        				str += "<input type='hidden' name='attachImage.uuid'";
+	        				str += " value='";
+	        				str += uuid;
+	        				str += "'/>";
+	        				
+	        				str += "<input type='hidden' name='attachImage.imagePath'";
+	        				str += " value='";
+	        				str += path;
+	        				str += "'/>";
+	        				
+	        				str += "<input type='hidden' name='attachImage.fileType'";
+	        				str += " value='";
+	        				str += type;
+	        				str += "'/>";
+	        				
+	        				console.log(str);
+	        				formObj.append(str).submit();
         			});
         		});
             }

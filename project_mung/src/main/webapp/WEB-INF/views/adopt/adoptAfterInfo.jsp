@@ -52,7 +52,7 @@
 		        </sec:authorize>
 			</div>
 			<form id="operForm" action="/freeboard/modify" method="get">
-				<input type="hidden" id="bno" name="bno" value="${after.bno}" /> 
+				<input type="hidden" id="bno" name="bno" value="${after.bno}" />
 				<input type="hidden" name="pageNum" value="${cri.pageNum}" /> 
 				<input type="hidden" name="amount" value="${cri.amount}" /> 
 				<input type="hidden" name="type" value="${cri.type}"> 
@@ -549,7 +549,7 @@
 		$("button[data-oper='remove']").on("click", function(e) {
 			var check = confirm("게시물을 삭제하시겠습니까?");
 			if(check){
-				operForm.append("<input type='text' name='userid' value='${board.userid}'>");
+				operForm.append("<input type='text' name='userid' value='${after.userid}'>");
 				operForm.append("<input type='hidden' name='${_csrf.parameterName }' value='${_csrf.token}'/>");
 				operForm.attr("action","/freeboard/remove"); 
 				operForm.attr("method","post");

@@ -26,11 +26,9 @@ public class SaleController {
 		log.info("saleList");
 		log.info("cateno : "+cri.getCateno());
 		
-		cri.setAmount(12);
-		
 		model.addAttribute("menu",service.getCate());
 		model.addAttribute("list",service.getSale(cri));
-		model.addAttribute("pageMaker",new PageDTO(cri,service.getSaleCount(cri)));
+		model.addAttribute("pageMaker",new PageDTO(cri,service.getCount(cri)));
 	}
 	
 	@GetMapping("/detail")

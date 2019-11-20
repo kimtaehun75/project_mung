@@ -72,6 +72,10 @@ public class SaleServiceImpl implements SaleService {
 	@Override
 	public int getCount(Criteria cri) {
 		log.info("getCount..");
+		if(cri.getCateno() == 0) {
+			return mapper.getCountNoneCate(cri);
+		}
+		
 		return mapper.getCount(cri);
 	}
 

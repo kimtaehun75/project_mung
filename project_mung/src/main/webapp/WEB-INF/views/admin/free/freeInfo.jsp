@@ -152,9 +152,7 @@
 <script>
 	/* console.log("=======");
 	console.log("js test");
-
 	var bnoValue = '<c:out value="${board.bno}"/>'; */
-
 	/* replyService.add({
 		reply : "js test",
 		replyer : "tester",
@@ -169,7 +167,6 @@
 					console.log(list[i]);
 				}
 			}); */
-
 	/* replyService.remove(12,function(count){
 		console.log(count);
 		

@@ -154,13 +154,6 @@
                      </p>
                   </div>
                </div>
-               <div class="d-flex">
-                  <div class="pricing">
-                     <p class="price">
-                        <span>${dogs.pre}</span>
-                     </p>
-                  </div>
-               </div>
             </div>
          </div>
       </div>

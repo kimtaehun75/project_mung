@@ -22,11 +22,15 @@ public interface SaleMapper {
 	
 	public int getCount(Criteria cri);
 	
+	public int getCountNoneCate(Criteria cri);
+	
 	public SaleVO getSaleInfo(@Param("saleno") int saleno);
 	
 	public SaleVO getAdminSaleInfo(@Param("saleno") String saleno);
 	
 	public int updateSale(SaleVO vo);
+	
+	public int updateAmount(SaleVO vo);
 	
 	public int deleteSale(int saleno);
 	

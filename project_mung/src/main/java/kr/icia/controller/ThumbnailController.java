@@ -23,7 +23,7 @@ import lombok.extern.log4j.Log4j;
 @Log4j
 public class ThumbnailController {
  
-    String uploadFolder = "D:\\sts3\\sts3\\sts-bundle\\work\\.metadata\\.plugins\\org.eclipse.wst.server.core\\tmp0\\wtpwebapps\\project_mung\\resources\\images";
+    String uploadFolder = "D:\\str3\\sts-bundle\\project\\.metadata\\.plugins\\org.eclipse.wst.server.core\\tmp0\\wtpwebapps\\project_mung\\resources\\images";
     
     @PostMapping(value="/uploadImageAction",
     		produces=MediaType.APPLICATION_JSON_UTF8_VALUE)
@@ -108,7 +108,7 @@ public class ThumbnailController {
 		File file;
 		
 		try {
-			file = new File("D:\\sts3\\sts3\\sts-bundle\\work\\.metadata\\.plugins\\org.eclipse.wst.server.core\\tmp0\\wtpwebapps\\project_mung\\resources\\images"+URLDecoder.decode(fileName,"UTF-8"));
+			file = new File("D:\\str3\\sts-bundle\\project\\.metadata\\.plugins\\org.eclipse.wst.server.core\\tmp0\\wtpwebapps\\project_mung\\resources\\images"+URLDecoder.decode(fileName,"UTF-8"));
 			System.out.println(file);
 			// 한글처리를 위한 파일이름을 UTF-8 방식으로 처리
 			// 알맞은 문자 포맷을 해석해서 읽어 들여야 함

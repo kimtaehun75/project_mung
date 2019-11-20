@@ -97,12 +97,11 @@ public class AdminController {
 	public void productList(Criteria cri,
 			Model model) {
 		log.info("productList");
-		
-		cri.setAmount(12);
+		log.info("pageMaker : "+new PageDTO(cri,sService.getCount(cri)));
 		
 		model.addAttribute("menu",sService.getCate());
 		model.addAttribute("list",sService.getSale(cri));
-		model.addAttribute("pageMaker",new PageDTO(cri,sService.getSaleCount(cri)));
+		model.addAttribute("pageMaker",new PageDTO(cri,sService.getCount(cri)));
 	}
 	
 	@GetMapping("/product/saleinfo")

@@ -362,7 +362,7 @@
 			    	});	
 					console.log("click");
 					// 웹 브라우저 검사 창에 클릭을 표시
-					var saleno = $('.product-remove a').attr("href");
+					var saleno = $(this).attr("href");
 					console.log(saleno);
 					var userid = '<c:out value="${pageContext.request.userPrincipal.name}"/>';
 					console.log(userid);

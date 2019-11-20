@@ -85,13 +85,13 @@
  		select distinct orderno,userid,username,addr_1,addr_2,addr_3,
 			email,phone,orderdate,state,salestate,
 			o.cpnum,cpname,
-			(select sum(cost) as allCost 
+			(select sum(cost*i.amount) as allCost 
 			from sale s,order_info i
 			where s.saleno=i.saleno
 			group by orderno
 			having orderno = #{orderno}) as allCost,
 			(select distinct decode(type,'0',value,'1',
-			(select sum(cost)*value/100 from sale s,order_info o
+			(select sum(cost*o.amount)*value/100 from sale s,order_info o
 			where s.saleno = o.saleno
 			group by orderno
 			having orderno = #{orderno})) as discost
@@ -105,14 +105,14 @@
 			and
 			orderno = #{orderno}) as discost,
 			(select distinct decode(type,'0',
-			(select sum(cost)-value
+			(select sum(cost*o.amount)-value
 			from
 			sale s,order_info o
 			where s.saleno = o.saleno
 			group by orderno
 			having orderno = #{orderno})
 			,'1',
-			(select sum(cost)-(sum(cost)*value/100) 
+			(select sum(cost*o.amount)-(sum(cost*o.amount)*value/100) 
 			from sale s,order_info o
 			where s.saleno = o.saleno
 			group by orderno
@@ -133,13 +133,13 @@
  	<select id="callOrderListNoCp" resultType="kr.icia.domain.OrderSaleVO">
  		select distinct orderno,userid,username,addr_1,addr_2,addr_3,
 			email,phone,orderdate,state,salestate,
-			(select sum(cost) as allCost 
+			(select sum(cost*i.amount) as allCost 
 			from sale s,order_info i
 			where s.saleno=i.saleno
 			group by orderno
 			having orderno = #{orderno}) as allCost,
 			0 as disCost,
-			(select sum(cost) as allCost 
+			(select sum(cost*i.amount) as allCost 
 			from sale s,order_info i
 			where s.saleno=i.saleno
 			group by orderno

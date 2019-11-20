@@ -35,6 +35,7 @@
 		select 
 		bno,
 		userid,
+		auth,
 		tear,
 		title,
 		content,
@@ -45,6 +46,7 @@
 		rownum rn,
 		bno,
 		b.userid,
+		auth,
 		tear,
 		title,
 		content,
@@ -52,9 +54,10 @@
 		views,
 		b.type 
 		from 
-		board b,member m,grade g 
+		board b,member m,grade g,member_auth a 
 		where b.userid = m.userid and 
         g.grade = m.grade and
+        a.userid = m.userid and 
 		<include refid="criteria"/>
 		
 		<![CDATA[
@@ -69,7 +72,7 @@
 		values(board_seq.nextval,#{userid},#{title},#{content})
 	</insert>
 	<select id="getBoard" resultType="kr.icia.domain.BoardVO">
-		select * from board where bno = #{bno} 
+		select b.*,a.auth from board b,member_auth a where bno = #{bno} and a.userid = b.userid 
 	</select>
 	<update id="updateView">
 		update board set views = (views+1) where bno = #{bno}
@@ -96,6 +99,7 @@
 		select 
 		bno,
 		userid,
+		auth,
 		tear,
 		title,
 		content,
@@ -105,6 +109,7 @@
 		(select /*+index_desc(board bno)*/
 		rownum rn,
 		bno,
+		auth,
 		b.userid,
 		tear,
 		title,
@@ -112,9 +117,10 @@
 		b.updatedate,
 		views 
 		from 
-		board b,member m,grade g 
+		board b,member m,grade g,member_auth a
 		where b.userid = m.userid and 
         g.grade = m.grade and
+        a.userid = m.userid and
 		<include refid="criteria"/>
 		
 		<![CDATA[

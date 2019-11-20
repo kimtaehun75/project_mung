@@ -60,8 +60,8 @@
                                        .attr('src',
                                              'http://localhost:8090/resources/images/기본프로필.png');
                               }
-                           });
-                  });
+                   	});
+       });
    </script>
 </sec:authorize>
 <script>

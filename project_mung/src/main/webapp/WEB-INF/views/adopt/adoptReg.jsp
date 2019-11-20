@@ -97,6 +97,7 @@
             sSkinURI: "../../resources/editor/SmartEditor2Skin.html",
             htParams : {
                 // 툴바 사용 여부
+                fOnBeforeUnload : function() {},
                 bUseToolbar : true,            
                 // 입력창 크기 조절바 사용 여부
                 bUseVerticalResizer : true,    
@@ -335,49 +336,6 @@
       
          
       });
-   </script>
-<script>
-   $(document).ready(function(){
-      var formObj = $("form[role='form']");
-      $("button[type='submit']").on("click",function(e){
-         e.preventDefault();
-         console.log("submit clicked");
-   
-         // 글 등록 시 첨부파일도 같이 db로 저장되는 과정
-         
-         var fileName = $(".uploadResult ul li").data("filename");
-         var uuid = $(".uploadResult ul li").data("uuid");
-         var path = $(".uploadResult ul li").data("path");
-         var type = $(".uploadResult ul li").data("type");
-         
-         path = path.replace(new RegExp(/\\/g),"/");
-         
-         var str = "";
-            str += "<input type='hidden' name='attachImage.fileName'";
-            str += ' value="';
-            str += fileName;
-            str += '"/>';
-            
-            str += "<input type='hidden' name='attachImage.uuid'";
-            str += ' value="';
-            str += uuid;
-            str += '"/>';
-            
-            str += "<input type='hidden' name='attachImage.imagePath'";
-            str += ' value="';
-            str += path;
-            str += '"/>';
-            
-            str += "<input type='hidden' name='attachImage.fileType'";
-            str += ' value="';
-            str += type;
-            str += '"/>"';
-         
-            console.log(str);
-            
-         formObj.append(str).submit();
-      });
-   });
    </script>
 
 

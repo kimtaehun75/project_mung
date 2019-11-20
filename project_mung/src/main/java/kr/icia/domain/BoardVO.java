@@ -8,6 +8,7 @@ import lombok.Data;
 public class BoardVO {
 	private int bno;
 	
+	private String auth;
 	private String userid;
 	private String grade;
 	private String tear;

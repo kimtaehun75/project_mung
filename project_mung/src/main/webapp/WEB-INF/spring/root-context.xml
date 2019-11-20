@@ -32,13 +32,14 @@
 	<bean id="dataSource"
 		class="com.zaxxer.hikari.HikariDataSource"
 		destroy-method="close">
-			<constructor-arg ref="hikariConfig"></constructor-arg>
+		<constructor-arg ref="hikariConfig"></constructor-arg>
 	</bean>
 	
 	<bean id="sqlSessionFactory"
 	class="org.mybatis.spring.SqlSessionFactoryBean">
 	<property name="dataSource"
-	ref="dataSource"></property>
+	ref="dataSource">
+	</property>
 	</bean>
 	
 	<mybatis-spring:scan base-package="kr.icia.mapper"/>

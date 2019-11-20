@@ -47,8 +47,8 @@ public class MailServiceImpl implements MailService {
 		
 		MailHandler sendMail = new MailHandler(mailSender);
 		
-		sendMail.addInline("메일사진1",new FileDataSource("D:\\sts3\\sts3\\sts-bundle\\work\\.metadata\\.plugins\\org.eclipse.wst.server.core\\tmp0\\wtpwebapps\\project_mung\\resources\\images\\메일사진1.png"));
-		sendMail.addInline("메일사진2", new FileDataSource("D:\\sts3\\sts3\\sts-bundle\\work\\.metadata\\.plugins\\org.eclipse.wst.server.core\\tmp0\\wtpwebapps\\project_mung\\resources\\images\\메일사진2.gif"));
+		sendMail.addInline("메일사진1",new FileDataSource("D:\\str3\\sts-bundle\\project\\.metadata\\.plugins\\org.eclipse.wst.server.core\\tmp0\\wtpwebapps\\project_mung\\resources\\images\\메일사진1.png"));
+		sendMail.addInline("메일사진2", new FileDataSource("D:\\str3\\sts-bundle\\project\\.metadata\\.plugins\\org.eclipse.wst.server.core\\tmp0\\wtpwebapps\\project_mung\\resources\\images\\메일사진2.gif"));
 		
 		sendMail.setSubject("멍품천국 인증"); // 메일제목
 		sendMail.setText( // 메일내용

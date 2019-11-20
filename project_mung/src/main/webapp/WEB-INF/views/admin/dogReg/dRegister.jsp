@@ -40,7 +40,7 @@
 
 			<label for="content"> 설명</label>
 			<div class="inputArea">
-				<textarea rows="20" cols="80" name="detail" readonly="readonly">${dogs.detail}</textarea>
+				${dogs.detail}
 			</div>
 			
 			<div class="inputArea">

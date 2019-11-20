@@ -31,7 +31,7 @@ import lombok.extern.log4j.Log4j;
 @Log4j
 public class FileController {
 		
-		String uploadFolder = "D:\\sts3\\sts3\\sts-bundle\\work\\.metadata\\.plugins\\org.eclipse.wst.server.core\\tmp0\\wtpwebapps\\project_mung\\resources\\images";
+		String uploadFolder = "D:\\str3\\sts-bundle\\project\\.metadata\\.plugins\\org.eclipse.wst.server.core\\tmp0\\wtpwebapps\\project_mung\\resources\\images";
 		
 		@PostMapping(value ="/uploadAjaxAction",
 				produces = MediaType.APPLICATION_JSON_UTF8_VALUE)

@@ -59,8 +59,6 @@
 		authentication-failure-handler-ref="loginFailureHandler"
 		/>
 		
-		
-		
 		<security:remember-me 
 		data-source-ref="dataSource"
 		token-validity-seconds="604800"/>
@@ -71,7 +69,8 @@
 		logout-url="/userlogout"
 		invalidate-session="true"
 		delete-cookies="remember-me,JSESSIONID"/>	
-	</security:http>
+		
+		</security:http>
 	
 	
 </beans>

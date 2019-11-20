@@ -75,7 +75,12 @@
 								${member.userName}
 							</td>
 							<td>
-								<a href="./getMember?userid=${member.userid}" class="">${member.userid}</a>
+								<c:if test="${member.report > 4}">
+									<a href="./getMember?userid=${member.userid}" class="" style="color:red;">${member.userid}</a>
+								</c:if>
+								<c:if test="${member.report < 5}">
+									<a href="./getMember?userid=${member.userid}" class="">${member.userid}</a>
+								</c:if>
 							</td>
 							<td>
 								${member.addr_2}

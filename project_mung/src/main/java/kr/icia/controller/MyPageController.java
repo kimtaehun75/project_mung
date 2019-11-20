@@ -25,6 +25,7 @@ import kr.icia.security.domain.CustomUser;
 import kr.icia.service.CartService;
 import kr.icia.service.CouponService;
 import kr.icia.service.GoodService;
+import kr.icia.service.ImageService;
 import kr.icia.service.MailService;
 import kr.icia.service.MemberService;
 import kr.icia.service.NoteService;
@@ -47,6 +48,7 @@ public class MyPageController {
 	private MailService Mservice;
 	private OrderService Oservice;
 	private SaleService sService;
+	private ImageService eService;
 	
 	private CustomUserDetailsService UserService;
 	private BCryptPasswordEncoder pwencoder;
@@ -104,13 +106,12 @@ public class MyPageController {
 	
 	@PreAuthorize("isAuthenticated()")
 	@GetMapping("/coupon")
-	public void coupon(Criteria cri,Model model,Principal prin) {
-		
+	public void coupon(Model model,Principal prin) {
+		log.info("coupon : ");
 		String userid = prin.getName();
-		cri.setType("I");
-		cri.setKeyword(userid);
 		
-		model.addAttribute("coupon",Cservice.haveCouponList(cri));
+		model.addAttribute("coupon",Cservice.haveUserCoupon(userid));
+		log.info(model);
 		
 	}
 	
@@ -299,8 +300,8 @@ public class MyPageController {
 			Sservice.deleteUser(userid);
 			Gservice.deleteUser(userid);
 			Mservice.deleteUserAuth(userid);
+			eService.removeUser(service.getMember(userid).getUserno());
 			service.deleteUser(userid);
-			
 			SecurityContextHolder.clearContext();
 			
 			if(session != null)

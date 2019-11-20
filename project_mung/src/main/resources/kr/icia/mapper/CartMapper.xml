@@ -68,7 +68,7 @@
  		where saleno= #{saleno}
  	</delete>
  	<select id="allCartCost" resultMap="cartMap">
- 		select ltrim(to_char(sum(cost),'L999,999')) as cost from sale_cart c,sale s 
+ 		select ltrim(to_char(sum(cost*c.amount),'L999,999')) as cost from sale_cart c,sale s 
 		where c.saleno = s.saleno
 		group by userid
         having userid = #{userid}
@@ -80,7 +80,7 @@
  		delete from sale_cart where userid = #{userid}
  	</delete>
  	<select id="allCartCost2" resultMap="cartMap">
- 		select sum(cost) as cost from sale_cart c,sale s 
+ 		select sum(cost*c.amount) as cost from sale_cart c,sale s 
 		where c.saleno = s.saleno
 		group by userid
         having userid = #{userid}
