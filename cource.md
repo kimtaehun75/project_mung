@@ -191,8 +191,6 @@
 
 
 ###### 1.MemberControlller
-
-
 	@PostMapping("/register")
 	public String register(MemberVO vo,RedirectAttributes rttr) throws Exception {
 		service.register(vo);
@@ -200,8 +198,8 @@
 
 
 --------------------------------------------------------------------------------------------------------------
-1. register.jsp 에서 받아온 회원 정보들을 MemberVO에 저장 후 Service를 호출
---------------------------------------------------------------------------------------------------------------
+register.jsp 에서 받아온 회원 정보들을 MemberVO에 저장 후 Service를 호출
+
 
 
 ###### 2.MailService
@@ -262,6 +260,8 @@
 		sendMail.setTo(vo.getEmail()); // 받는이
 		sendMail.send();
 	}
+
+
 --------------------------------------------------------------------------------------------------------------
 1. MemberController에서 받아온 VO에서 비밀번호를 암호화하여 Console에 출력하고 암호화 된 비밀번호를 VO에 다시 저장
 2. Mapper의 createUser를 호출하고 파라메터로 VO를 넘김
@@ -273,144 +273,169 @@
 --------------------------------------------------------------------------------------------------------------
 
 
+###### 3.MailMapper
 
 
-3.MailMapper
-<insert id="createUser">
-  	insert into member(userno,userid,userpw,username,addr_1,addr_2,addr_3,email,phone,birth)  	values(member_seq.nextval,#{userid},#{userpw},#{userName},#{addr_1},#{addr_2},#{addr_3},#{email},#{phone},#{birth})
-  </insert>
+	<insert id="createUser">
+		insert into member(userno,userid,userpw,username,addr_1,addr_2,addr_3,email,phone,birth)  	values(member_seq.nextval,#{userid},#{userpw},#{userName},#{addr_1},#{addr_2},#{addr_3},#{email},#{phone},#{birth})
+	  </insert>
 
-<insert id="createAuthKey">
-	insert into email_auth(email,authkey) values(#{email},#{authKey})
-</insert>
-<insert id="createAuth">
-	insert into member_auth(userid,auth) values(#{userid},'ROLE_MEMBER')
-</insert>
+	<insert id="createAuthKey">
+		insert into email_auth(email,authkey) values(#{email},#{authKey})
+	</insert>
+	<insert id="createAuth">
+		insert into member_auth(userid,auth) values(#{userid},'ROLE_MEMBER')
+	</insert>
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. createUser에서 VO에 저장된 값을 데이터베이스에 저장함
 2. createAuthKey에서 넘겨받은 email,authKey를 저장함
 3. createAuth에서 넘겨받은 userId와 ROLE_MEMBER라는 권한을 저장함
 --------------------------------------------------------------------------------------------------------------
-4.MemberControlller
-@PostMapping("/register")
-	public String register(MemberVO vo,RedirectAttributes rttr) throws Exception {
-return "redirect:/userlogin";
-}
+
+
+###### 4.MemberControlller
+
+
+	@PostMapping("/register")
+		public String register(MemberVO vo,RedirectAttributes rttr) throws Exception {
+	return "redirect:/userlogin";
+	}
+	
+	
 --------------------------------------------------------------------------------------------------------------
-1. 처리가 다 끝나면 userlogin 페이지로 redirect 시킴
-5.TempKey
-public class TempKey { // 인증키 생성 클래스
-	private boolean lowerCheck; // 소문자 변환을 위한 변수
-	private int size; // 만들 임의의 값의 최대 길이
+처리가 다 끝나면 userlogin 페이지로 redirect 시킴
 
-	public String getKey(int size, boolean lowerCheck) {
-		this.size = size;
-		this.lowerCheck = lowerCheck;
-		return init();
-	}
-	private String init() {
-		Random ran = new Random();
-		StringBuffer sb = new StringBuffer();
-		int num = 0;
-		do {
-			num = ran.nextInt(75) + 48;
-			if ((num >= 48 && num <= 57) || (num >= 65 && num <= 90) || (num >= 97 && num <= 122)) {
-				sb.append((char) num);
-			} else {
-				continue;
-			}
-		} while (sb.length() < size);
-		if (lowerCheck) {
-			return sb.toString().toLowerCase();
+
+###### 5.TempKey
+	public class TempKey { // 인증키 생성 클래스
+		private boolean lowerCheck; // 소문자 변환을 위한 변수
+		private int size; // 만들 임의의 값의 최대 길이
+
+		public String getKey(int size, boolean lowerCheck) {
+			this.size = size;
+			this.lowerCheck = lowerCheck;
+			return init();
 		}
-		return sb.toString();
-	}
+		private String init() {
+			Random ran = new Random();
+			StringBuffer sb = new StringBuffer();
+			int num = 0;
+			do {
+				num = ran.nextInt(75) + 48;
+				if ((num >= 48 && num <= 57) || (num >= 65 && num <= 90) || (num >= 97 && num <= 122)) {
+					sb.append((char) num);
+				} else {
+					continue;
+				}
+			} while (sb.length() < size);
+			if (lowerCheck) {
+				return sb.toString().toLowerCase();
+			}
+			return sb.toString();
+		}
 
-}
+	}
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. 난수를 받는 ran을 선언 후 nextInt로 0부터 75의 값을 받아 +48을 더해줌 그리고 그값을 num에 할당
 2. num에 할당된 숫자를 char형식으로 StringBuffer,sb 에 할당함
 3. 조건문에 적힌 첫 번째 조건(num >= 48 && num <= 57)은 숫자를 지정하는 부분이고
 두 번째,세 번째는 영문 소문자,영문 대문자를 지정한다. 그래서 숫자,영문 소문자,영문 대문자만으로 구성된 인증키를 만듬
 --------------------------------------------------------------------------------------------------------------
-6.MailHandler
-public class MailHandler { // 메일보내기 유틸 클래스
-	private JavaMailSender mailSender;
-	private MimeMessage message;
-	private MimeMessageHelper messageHelper;
 
-	public MailHandler(JavaMailSender mailSender) throws MessagingException {
-		this.mailSender = mailSender;
-		message = this.mailSender.createMimeMessage();
-		messageHelper = new MimeMessageHelper(message, true, "UTF-8");
-	}
 
-	public void setSubject(String subject) throws MessagingException {
-		messageHelper.setSubject(subject);
-	}
+###### 6.MailHandler
 
-	public void setText(String htmlContent) throws MessagingException {
-		messageHelper.setText(htmlContent, true);
-	}
 
-	public void setFrom(String email, String name) throws UnsupportedEncodingException, MessagingException {
-		messageHelper.setFrom(email, name);
-	}
+	public class MailHandler { // 메일보내기 유틸 클래스
+		private JavaMailSender mailSender;
+		private MimeMessage message;
+		private MimeMessageHelper messageHelper;
 
-	public void setTo(String email) throws MessagingException {
-		messageHelper.setTo(email);
-	}
+		public MailHandler(JavaMailSender mailSender) throws MessagingException {
+			this.mailSender = mailSender;
+			message = this.mailSender.createMimeMessage();
+			messageHelper = new MimeMessageHelper(message, true, "UTF-8");
+		}
 
-	public void addInline(String contentId, DataSource dataSource) throws MessagingException {
-		messageHelper.addInline(contentId, dataSource);
-	}
+		public void setSubject(String subject) throws MessagingException {
+			messageHelper.setSubject(subject);
+		}
 
-	public void send() {
-		mailSender.send(message);
-	}
+		public void setText(String htmlContent) throws MessagingException {
+			messageHelper.setText(htmlContent, true);
+		}
 
---------------------------------------------------------------------------------------------------------------
-1. 메일을 보내는데 필요한 유틸들을 쉽고 간단하기 쓰기 위해 한 곳에 모아 작업을 함
-2. mailSender는 메일을 보내기 위해 필요한 기능이고 해당 기능은 send로 대체함
-3. message는 JavaMailSender.createMimeMessage()의 변수로 보낼 메시지를 담는 용도로 씀
-4. messageHelper는 보낼 메시지와 파일 첨부여부, 언어 코드를 설정해주기 위해 사용함
-5. 각 메서드 setSubject는 제목,setText는 내용,setFrom는 보낸이,setTo는 받는이,addInline은 보낼 파일,send는 보내는 기능을 담당함.
---------------------------------------------------------------------------------------------------------------
-7.MemberController
-@GetMapping("/member/auth")
-	public String authEmail(String email,String authKey,String userName,Model model) {
+		public void setFrom(String email, String name) throws UnsupportedEncodingException, MessagingException {
+			messageHelper.setFrom(email, name);
+		}
+
+		public void setTo(String email) throws MessagingException {
+			messageHelper.setTo(email);
+		}
+
+		public void addInline(String contentId, DataSource dataSource) throws MessagingException {
+			messageHelper.addInline(contentId, dataSource);
+		}
+
+		public void send() {
+			mailSender.send(message);
+		}
+
+	--------------------------------------------------------------------------------------------------------------
+	1. 메일을 보내는데 필요한 유틸들을 쉽고 간단하기 쓰기 위해 한 곳에 모아 작업을 함
+	2. mailSender는 메일을 보내기 위해 필요한 기능이고 해당 기능은 send로 대체함
+	3. message는 JavaMailSender.createMimeMessage()의 변수로 보낼 메시지를 담는 용도로 씀
+	4. messageHelper는 보낼 메시지와 파일 첨부여부, 언어 코드를 설정해주기 위해 사용함
+	5. 각 메서드 setSubject는 제목,setText는 내용,setFrom는 보낸이,setTo는 받는이,addInline은 보낼 파일,send는 보내는 기능을 담당함.
+	--------------------------------------------------------------------------------------------------------------
+	7.MemberController
+	@GetMapping("/member/auth")
+		public String authEmail(String email,String authKey,String userName,Model model) {
+
+			service.userAuth(email,authKey);
+			model.addAttribute("email",email);
+			model.addAttribute("userName",userName);
+
+			return "/member/auth";	
+		}
 		
-		service.userAuth(email,authKey);
-		model.addAttribute("email",email);
-		model.addAttribute("userName",userName);
 		
-		return "/member/auth";	
-	}
 --------------------------------------------------------------------------------------------------------------
-1. get방식으로 받아온 email,authKey를 Service에 보내줌
---------------------------------------------------------------------------------------------------------------
+get방식으로 받아온 email,authKey를 Service에 보내줌
 
 
+###### 8.MailService
 
 
-8.MailService
-@Override
-	public boolean userAuth(String email, String authKey) {
-		return mapper.userAuth(email,authKey) == 1;
-	}
+	@Override
+		public boolean userAuth(String email, String authKey) {
+			return mapper.userAuth(email,authKey) == 1;
+		}
+
+
 --------------------------------------------------------------------------------------------------------------
 1. Controller에서 받아온 email,authKey를 mapper에 전달
 2. 결과 값을 리턴
 --------------------------------------------------------------------------------------------------------------
-9.MailMapper
-<update id="userAuth">
-		<![CDATA[
-		update member set enabled = 1,updatedate = sysdate where 
-		(select count(*) from email_auth 
-		where email = #{email} and authkey = #{authKey}) > 0 
-		and email = #{email}
-		]]>
-	</update>
+
+
+###### 9.MailMapper
+
+
+	<update id="userAuth">
+			<![CDATA[
+			update member set enabled = 1,updatedate = sysdate where 
+			(select count(*) from email_auth 
+			where email = #{email} and authkey = #{authKey}) > 0 
+			and email = #{email}
+			]]>
+		</update>
+		
+		
 --------------------------------------------------------------------------------------------------------------
 1. Controller에서부터 받아온 email,authKey를 서브 쿼리에서 비교하여 동일한 값이 있을 경우 1을 출력하고,없을 경우 조건식에 위배되어 수정이 되지않음
 2. 동일한 email,authKey가 있을 경우 1을 출력하고, member 테이블에서 동일한 이메일을 가진 회원의 계정을 활성화 상태(enabled=1)로 만들고 updatedate를 쿼리가 실행한 날짜로 수정을 시켜줌
