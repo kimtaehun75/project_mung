@@ -192,12 +192,12 @@
 
 ###### 1.MemberControlller
 
-{
+"`
+
 @PostMapping("/register")
 	public String register(MemberVO vo,RedirectAttributes rttr) throws Exception {
 		service.register(vo);
 	}
-}
 
 
 --------------------------------------------------------------------------------------------------------------
