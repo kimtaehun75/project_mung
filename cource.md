@@ -184,19 +184,22 @@
 9.3 지정 회원 쿠폰 발급
 
 
-###### 1. 회원관리 < 일반 회원 >
+##### 1. 회원관리 < 일반 회원 >
 
 
 1.1 회원가입
 
 
-1.MemberControlller
+###### 1.MemberControlller
 
-
+\'
 @PostMapping("/register")
 	public String register(MemberVO vo,RedirectAttributes rttr) throws Exception {
 		service.register(vo);
 	}
+\'
+
+
 --------------------------------------------------------------------------------------------------------------
 1. register.jsp 에서 받아온 회원 정보들을 MemberVO에 저장 후 Service를 호출
 --------------------------------------------------------------------------------------------------------------
