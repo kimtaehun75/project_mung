@@ -192,9 +192,8 @@
 
 ###### 1.MemberControlller
 
-"`
 
-@PostMapping("/register")
+	@PostMapping("/register")
 	public String register(MemberVO vo,RedirectAttributes rttr) throws Exception {
 		service.register(vo);
 	}
@@ -205,9 +204,9 @@
 --------------------------------------------------------------------------------------------------------------
 
 
-2.MailService
-@Service
-public class MailServiceImpl implements MailService {
+###### 2.MailService
+	@Service
+	public class MailServiceImpl implements MailService {
 	@Setter(onMethod_=@Autowired)
 	public MailMapper mapper;
 
