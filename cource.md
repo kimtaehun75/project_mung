@@ -184,10 +184,16 @@
 9.3 지정 회원 쿠폰 발급
 
 
-##### 1. 회원관리 < 일반 회원 >
+
+----------
 
 
-1.1 회원가입
+
+
+#### 1. 회원관리 < 일반 회원 >
+
+
+##### 1.1 회원가입
 
 
 ###### 1.MemberControlller
@@ -425,6 +431,8 @@ register.jsp 에서 받아온 회원 정보들을 MemberVO에 저장 후 Service
 get방식으로 받아온 email,authKey를 Service에 보내줌
 
 
+
+
 ###### 8.MailService
 
 
@@ -461,72 +469,112 @@ get방식으로 받아온 email,authKey를 Service에 보내줌
 --------------------------------------------------------------------------------------------------------------
 
 
---------------------------------------------------------------------------------------------------------------
-1. 이메일로 보낸 하이퍼링크에 생성한 인증키를 url로 함께 보내 Get방식으로 인증키를 다시 받아 회원의 인증 상태를 변경시켜줌
---------------------------------------------------------------------------------------------------------------
+
+
+![1](https://user-images.githubusercontent.com/55867290/71567767-d31d5580-2b04-11ea-8109-95273966deb8.png)
+![2](https://user-images.githubusercontent.com/55867290/71567797-111a7980-2b05-11ea-8376-a49a4cc483a6.png)
+
 
 --------------------------------------------------------------------------------------------------------------
-1. 이메일 인증이 되지않은 계정이라면 위의 이미지처럼 로그인이 되지않음
-1.2 로그인
-1.CustomAuthenticationProvider
-@Override
-	public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-		
-		String userid= (String) authentication.getPrincipal();
-	   	String userpw = (String) authentication.getCredentials();
-	     
-		CustomUser user = (CustomUser) service.loadUserByUsername(userid);
---------------------------------------------------------------------------------------------------------------
-1. userlogin페이지에서 입력한 userId와 userpw를 변수에 할당하고 UserDetailService의 파라메터로 userId를 넘겨 호출함
---------------------------------------------------------------------------------------------------------------
-2.CustomUserDetailService
-@Override
-	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		MemberVO vo = mapper.read(username);
---------------------------------------------------------------------------------------------------------------
-1. Provider에서 가져온 userId를 Mapper의 파라메터 값으로 넘기고 호출함
---------------------------------------------------------------------------------------------------------------
+이메일로 보낸 하이퍼링크에 생성한 인증키를 url로 함께 보내 Get방식으로 인증키를 다시 받아 회원의 인증 상태를 변경시켜줌
 
 
 
-3.MemberMapper
-<select id="read" resultMap="memberMap">
-	select mem.userno,mem.userid,userpw,username,addr_1,addr_2,addr_3,email,phone,to_char(birth,'yyyyMMdd') as birth,joindate,updatedate,report,grade,adopt,enabled,auth,uuid,imagepath,filename 
-	from 
-	member mem,member_auth auth,member_img img
-        where auth.userid(+) = mem.userid
-        and img.userno(+) = mem.userno
-        and mem.userid = #{userid}
-	</select>
+
+![3](https://user-images.githubusercontent.com/55867290/71567801-1972b480-2b05-11ea-819f-790879de6fbe.png)
+
+
+--------------------------------------------------------------------------------------------------------------
+이메일 인증이 되지않은 계정이라면 위의 이미지처럼 로그인이 되지않음
+
+
+
+
+##### 1.2 로그인
+
+
+
+
+###### 1.CustomAuthenticationProvider
+	@Override
+		public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+
+			String userid= (String) authentication.getPrincipal();
+			String userpw = (String) authentication.getCredentials();
+
+			CustomUser user = (CustomUser) service.loadUserByUsername(userid);
+--------------------------------------------------------------------------------------------------------------
+userlogin페이지에서 입력한 userId와 userpw를 변수에 할당하고 UserDetailService의 파라메터로 userId를 넘겨 호출함
+
+
+
+
+###### 2.CustomUserDetailService
+	@Override
+		public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+			MemberVO vo = mapper.read(username);
+
+
+--------------------------------------------------------------------------------------------------------------
+Provider에서 가져온 userId를 Mapper의 파라메터 값으로 넘기고 호출함
+
+
+
+
+###### 3.MemberMapper
+
+
+	<select id="read" resultMap="memberMap">
+		select mem.userno,mem.userid,userpw,username,addr_1,addr_2,addr_3,email,phone,to_char(birth,'yyyyMMdd') as birth,joindate,updatedate,report,grade,adopt,enabled,auth,uuid,imagepath,filename 
+		from 
+		member mem,member_auth auth,member_img img
+		where auth.userid(+) = mem.userid
+		and img.userno(+) = mem.userno
+		and mem.userid = #{userid}
+		</select>
+
+
 --------------------------------------------------------------------------------------------------------------
 1. Service로 부터 받아온 userid 를 DB 에서 일치하는 회원의 정보들을 가져오는데, member_img에 저장한 회원의 프로필 사진이 있다면 출력을 같이 하고 없으면 null 값을 출력하기위해 outer join을 사용하였음
 2. 그리고 그 결과를 memberVO에 저장함
 --------------------------------------------------------------------------------------------------------------
-4.CustomUserDetailService
-MemberVO vo = mapper.read(username);
-if(vo == null) {
-	throw new BadCredentialsException(username);
-	}
-	String enabled= vo.getEnabled();
-	return vo==null?null:new CustomUser(vo)
-	}
+
+
+###### 4.CustomUserDetailService
+
+
+	MemberVO vo = mapper.read(username);
+	if(vo == null) {
+		throw new BadCredentialsException(username);
+		}
+		String enabled= vo.getEnabled();
+		return vo==null?null:new CustomUser(vo)
+		}
+
 
 --------------------------------------------------------------------------------------------------------------
 1. Mapper에서 저장한 MemberVO를 변수 vo 에 할당하고 null 값이면 예외 처리를 함
 2. vo가 널이 아니면 vo가 파라메터로 담긴 CustomUser를 리턴해줌
 --------------------------------------------------------------------------------------------------------------
-5.CustomAuthenticationProvider
-CustomUser user = (CustomUser) service.loadUserByUsername(userid);
-		log.info(user);
 
-		if(user == null) {
-			throw new UsernameNotFoundException(userid);
+
+
+
+###### 5.CustomAuthenticationProvider
+	
+	
+	CustomUser user = (CustomUser) service.loadUserByUsername(userid);
+			log.info(user);
+
+			if(user == null) {
+				throw new UsernameNotFoundException(userid);
+			}
+			if(!matchPassword(userpw, user.getPassword())) {
+				throw new BadCredentialsException(userid);
 		}
-		if(!matchPassword(userpw, user.getPassword())) {
-			throw new BadCredentialsException(userid);
-        }
-private boolean matchPassword(String loginPwd, String password) {
-        return loginPwd.equals(password);   
+	private boolean matchPassword(String loginPwd, String password) {
+		return loginPwd.equals(password);   
+
 
 --------------------------------------------------------------------------------------------------------------
 1. Service에서 가져온 CustomUser 타입의 결과를 user에 할당을 하고 null이 아닌지 확인하고 null이라면 예외처리를 함
@@ -534,7 +582,11 @@ private boolean matchPassword(String loginPwd, String password) {
 --------------------------------------------------------------------------------------------------------------
 
 
-6.CustomAuthenticationProvider
+
+
+###### 6.CustomAuthenticationProvider
+
+
 String enabled = user.getEnabled();
 
 if(enabled.equals("0")) {
