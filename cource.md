@@ -2499,7 +2499,7 @@ Controller 에서 넘겨받은 userid 를 mapper로 넘겨주며 호출, 결과 
 
 
 
-##### 4.받은 쪽지함
+#### 4.받은 쪽지함
 
 
 	<c:if test="${recv.recvread == '읽음' }">
