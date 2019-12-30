@@ -8,13 +8,13 @@
 #### 목차
 
 
-### <일반 회원>(##### 1.1 회원가입)
+### 일반 회원
 
 
 #### 1. 회원관리
 
 
-1.1 [회원가입]()
+1.1 [회원가입](##### 1.1 회원가입)
 
 
 1.2 로그인
@@ -96,6 +96,7 @@
 
 
 ### <관리자>
+
 
 #### 5. 회원관리
 
@@ -197,6 +198,8 @@
 
 
 ###### 1.MemberControlller
+	
+	
 	@PostMapping("/register")
 	public String register(MemberVO vo,RedirectAttributes rttr) throws Exception {
 		service.register(vo);
@@ -210,6 +213,8 @@ register.jsp 에서 받아온 회원 정보들을 MemberVO에 저장 후 Service
 
 
 ###### 2.MailService
+	
+	
 	@Service
 	public class MailServiceImpl implements MailService {
 	@Setter(onMethod_=@Autowired)
@@ -322,6 +327,8 @@ register.jsp 에서 받아온 회원 정보들을 MemberVO에 저장 후 Service
 
 
 ###### 5.TempKey
+	
+	
 	public class TempKey { // 인증키 생성 클래스
 		private boolean lowerCheck; // 소문자 변환을 위한 변수
 		private int size; // 만들 임의의 값의 최대 길이
