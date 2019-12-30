@@ -14,10 +14,10 @@
 #### 1. 회원관리
 
 
-1.1 회원가입
+1.1 [회원가입](https://github.com/kimtaehun75/project_mung/blob/master/cource.md#11-%ED%9A%8C%EC%9B%90%EA%B0%80%EC%9E%85)
 
 
-1.2 로그인
+1.2 [로그인](https://github.com/kimtaehun75/project_mung/blob/master/cource.md#12-%EB%A1%9C%EA%B7%B8%EC%9D%B8)
 
 
 1.3 회원정보 수정
