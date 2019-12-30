@@ -1532,7 +1532,8 @@ Mapper에서 반환받은 장바구니 개수를 count로 받아 장바구니 �
 
 
 
-
+![6](https://user-images.githubusercontent.com/55867290/71567812-2e4f4800-2b05-11ea-8249-64b46417098a.png)
+![7](https://user-images.githubusercontent.com/55867290/71567815-360eec80-2b05-11ea-8440-c5d253ed0944.png)
 --------------------------------------------------------------------------------------------------------------
 1. 상품 목록 페이지에서 장바구니 담기가 가능
 2. 상품 상세 페이지에서도 장바구니 담기가 가능
@@ -1540,32 +1541,34 @@ Mapper에서 반환받은 장바구니 개수를 count로 받아 장바구니 �
 
 
 
+
+![8](https://user-images.githubusercontent.com/55867290/71567819-4030eb00-2b05-11ea-8e36-6208371fde73.png)
 --------------------------------------------------------------------------------------------------------------
-1. 장바구니에 담긴 상품의 수 만큼 헤더의 장바구니 아이콘에 카운트되어 있음
---------------------------------------------------------------------------------------------------------------
+장바구니에 담긴 상품의 수 만큼 헤더의 장바구니 아이콘에 카운트되어 있음
 
 
 
 
 
+##### 2.4 관심 상품 등록
 
 
+###### 1.good.js
 
 
+	function checkGood(param,callback,error){
+			var saleno = param.saleno;
+			$.getJSON("/good/checkGoodCount/"+saleno,
+					function(count){
+						if(callback){
+							callback(count);
+						}
+			}).fail(function(xhr,status,err){
+				if(error){
+					error(er);
+				}
 
-2.4 관심 상품 등록
-1.good.js
-function checkGood(param,callback,error){
-		var saleno = param.saleno;
-		$.getJSON("/good/checkGoodCount/"+saleno,
-				function(count){
-					if(callback){
-						callback(count);
-					}
-		}).fail(function(xhr,status,err){
-			if(error){
-				error(er);
-			}
+
 --------------------------------------------------------------------------------------------------------------
 1. 상품 목록에서 관심 상품 등록버튼을 누르게 되면 먼저 checkGood에서 현재 관심 상품으로 등록한 상품인지 등록이 되지 않은 제품인지 확인을 하게됨
 2. json으로 uri에 상품 번호(saleno)를 get 방식을 controller 에 전달
@@ -1574,25 +1577,27 @@ function checkGood(param,callback,error){
 
 
 
+###### 2.GoodController
 
 
-2.GoodController
-@GetMapping(value = "/checkGoodCount/{saleno}", produces= { 
-			MediaType.APPLICATION_XML_VALUE,
-			MediaType.APPLICATION_JSON_UTF8_VALUE
-		})
-@ResponseBody
-public ResponseEntity<String> checkGoodCount(Principal prin,
-	@PathVariable("saleno") int saleno) {
-	String userid = prin.getName();
-	GoodVO vo = new GoodVO();
-			
-	vo.setSaleno(saleno);
-	vo.setUserid(userid);
-			
-	String count = service.checkGood(vo);
-		return new ResponseEntity<>(count,HttpStatus.OK);
-	}
+	@GetMapping(value = "/checkGoodCount/{saleno}", produces= { 
+				MediaType.APPLICATION_XML_VALUE,
+				MediaType.APPLICATION_JSON_UTF8_VALUE
+			})
+	@ResponseBody
+	public ResponseEntity<String> checkGoodCount(Principal prin,
+		@PathVariable("saleno") int saleno) {
+		String userid = prin.getName();
+		GoodVO vo = new GoodVO();
+
+		vo.setSaleno(saleno);
+		vo.setUserid(userid);
+
+		String count = service.checkGood(vo);
+			return new ResponseEntity<>(count,HttpStatus.OK);
+		}
+		
+		
 --------------------------------------------------------------------------------------------------------------
 1. 현재 로그인 중인 회원의 정보중,회원의 아이디를 userid에 할당
 2. vo에 회원의 아이디와 상품 목록페이지에서 넘겨 받은 상품 번호를 할당
@@ -1601,115 +1606,158 @@ public ResponseEntity<String> checkGoodCount(Principal prin,
 --------------------------------------------------------------------------------------------------------------
 
 
-3.GoodService
-@Override
-	public String checkGood(GoodVO vo) {
-		return mapper.checkGood(vo);
-	}
+
+
+###### 3.GoodService
+
+
+	@Override
+		public String checkGood(GoodVO vo) {
+			return mapper.checkGood(vo);
+		}
+		
+		
 --------------------------------------------------------------------------------------------------------------
-1. Controller 에서 넘겨 받은 vo 를 매퍼로 넘겨줌
+Controller 에서 넘겨 받은 vo 를 매퍼로 넘겨줌
+
+
+
+
+###### 4.GoodMapper
+
+
+	<select id="checkGood" resultType="String">
+		select count(*) from sale_good where 
+		userid = #{userid} and saleno = #{saleno}
+		</select>
+		
+		
 --------------------------------------------------------------------------------------------------------------
-4.GoodMapper
-<select id="checkGood" resultType="String">
- 	select count(*) from sale_good where 
- 	userid = #{userid} and saleno = #{saleno}
- 	</select>
---------------------------------------------------------------------------------------------------------------
-1. 전체 관심 상품 목록 테이블에서 넘겨 받은 회원의 아이디와 넘겨 받은 상품 번호 또한 일치하는 관심 상품의 개 수를 조회 하여 반환
---------------------------------------------------------------------------------------------------------------
+전체 관심 상품 목록 테이블에서 넘겨 받은 회원의 아이디와 넘겨 받은 상품 번호 또한 일치하는 관심 상품의 개 수를 조회 하여 반환
 
 
 
 
+###### 5.제품 페이지
 
 
-
-5.제품 페이지
-function(result){
-               if(result == '1'){
-                                        goodService.removeGood(saleno,userid,function(result){
-               alert('좋아요를 취소했습니다.');
-               goodBtn.css('color','white');
-               });
-}else{
-                     goodService.insertGood(good,function(result){
-                     if(result === 'success'){
-                                               alert('좋아요를 눌르셨습니다.');
-                                               goodBtn.css('color','red');
-                                            }else{
-                                        goodService.insertGood(good,function(result){
-                                            if(result === 'success'){
-                                               console.log(result);
-                                               alert('좋아요를 눌르셨습니다.');
-                                               goodBtn.css('color','red');
-                                            }
-                                        });
+	function(result){
+		       if(result == '1'){
+						goodService.removeGood(saleno,userid,function(result){
+		       alert('좋아요를 취소했습니다.');
+		       goodBtn.css('color','white');
+		       });
+	}else{
+			     goodService.insertGood(good,function(result){
+			     if(result === 'success'){
+						       alert('좋아요를 눌르셨습니다.');
+						       goodBtn.css('color','red');
+						    }else{
+						goodService.insertGood(good,function(result){
+						    if(result === 'success'){
+						       console.log(result);
+						       alert('좋아요를 눌르셨습니다.');
+						       goodBtn.css('color','red');
+						    }
+						});
+						
+						
 --------------------------------------------------------------------------------------------------------------
 1. Mapper에서 돌려 받은 값이 1 이라면 removeGood을 호출
 2. Mapper에서 관심 상품을 삭제하는 쿼리를 수행하고 버튼색을 바꿈
 3. Mapper에서 돌려 받은 값이 1 이 아니라면 insertGood을 호출하여 관심 상품을 추가 한 뒤 버튼의 색을 바꾸어 줌
-6.GoodMapper
-<delete id="deleteGood">
- 		delete from sale_good 
- 		where userid = #{userid} and saleno = #{saleno} 
- 	</delete>
+--------------------------------------------------------------------------------------------------------------
+
+
+
+
+###### 6.GoodMapper
+
+
+	<delete id="deleteGood">
+			delete from sale_good 
+			where userid = #{userid} and saleno = #{saleno} 
+		</delete>
+		
+		
 --------------------------------------------------------------------------------------------------------------
 1. vo에 담아 보낸 회원 아이디(userid)와 상품 번호(saleno)로 일치하는 회원의 관심 상품을 삭제
 --------------------------------------------------------------------------------------------------------------
-7.GoodMapper
-<insert id="insertGood">
- 		insert into sale_good 
-	    select #{saleno},#{userid} from dual 
-	    where not exists 
-	    (select 0 from sale_good
-	    where userid = #{userid} and 
-	    saleno = #{saleno})
- 	</insert>
+
+
+
+
+###### 7.GoodMapper
+
+
+	<insert id="insertGood">
+			insert into sale_good 
+		    select #{saleno},#{userid} from dual 
+		    where not exists 
+		    (select 0 from sale_good
+		    where userid = #{userid} and 
+		    saleno = #{saleno})
+		</insert>
+		
+		
 --------------------------------------------------------------------------------------------------------------
-1. vo에 담아 보낸 회원 아이디(userid)와 상품 번호(saleno)로 일치하는 회원의 관심 상품을 등록
---------------------------------------------------------------------------------------------------------------
+vo에 담아 보낸 회원 아이디(userid)와 상품 번호(saleno)로 일치하는 회원의 관심 상품을 등록
 
 
 
 
-2.5 상품 결제
-1.HomeController
-@PostMapping("/order")
-	public String orderPost(OrderSaleVO vo) {
-		if(vo.getCpnum() != 0) {
-			service.insertOrderSaleCoupon(vo);
-			service.insertOrderList(vo.getUserid());
-		}else {
-			service.insertOrderSale(vo);
-			service.insertOrderList(vo.getUserid());
-		}
+##### 2.5 상품 결제
+
+
+###### 1.HomeController
+
+
+	@PostMapping("/order")
+		public String orderPost(OrderSaleVO vo) {
+			if(vo.getCpnum() != 0) {
+				service.insertOrderSaleCoupon(vo);
+				service.insertOrderList(vo.getUserid());
+			}else {
+				service.insertOrderSale(vo);
+				service.insertOrderList(vo.getUserid());
+			}
+			
+			
 --------------------------------------------------------------------------------------------------------------
 1. 상품 결제 페이지에서 쿠폰 번호를 받아오는데 쿠폰이 없다면 0으로 넘어옴
 2. 조건문을 통해 적용시킬 쿠폰이 있다면 쿠폰 번호도 같이 DB에 저장시키는 매서드를 호출
 3. 적용시킬 쿠폰이 없다면 쿠폰 번호없이 DB에 저장을 시키는 매서드를 호출
 --------------------------------------------------------------------------------------------------------------
-2.OrderService
-@Override
-	public void insertOrderSaleCoupon(OrderSaleVO vo) {
-		mapper.insertOrderSaleCoupon(vo);
-	}
-@Override
-public void insertOrderSale(OrderSaleVO vo) {
-		mapper.insertOrderSale(vo);
-3.OrderMapper
-<insert id="insertOrderSaleCoupon">
-insert into order_sale(orderno,userid,username,addr_1,addr_2,addr_3,email,phone,cpnum) 
+
+
+
+
+###### 2.OrderService
+
+
+	@Override
+		public void insertOrderSaleCoupon(OrderSaleVO vo) {
+			mapper.insertOrderSaleCoupon(vo);
+		}
+	@Override
+	public void insertOrderSale(OrderSaleVO vo) {
+			mapper.insertOrderSale(vo);
+	3.OrderMapper
+	<insert id="insertOrderSaleCoupon">
+	insert into order_sale(orderno,userid,username,addr_1,addr_2,addr_3,email,phone,cpnum) 
+		values(
+	info_seq.nextval,#{userid},#{userName},
+	#{addr_1},#{addr_2},#{addr_3},#{email},#{phone},#{cpnum})
+		</insert>
+	<insert id="insertOrderSale">
+			insert into
+	order_sale(orderno,userid,username,addr_1,addr_2,addr_3,email,phone) 
 	values(
-info_seq.nextval,#{userid},#{userName},
-#{addr_1},#{addr_2},#{addr_3},#{email},#{phone},#{cpnum})
- 	</insert>
-<insert id="insertOrderSale">
- 		insert into
-order_sale(orderno,userid,username,addr_1,addr_2,addr_3,email,phone) 
-values(
-info_seq.nextval,#{userid},#{userName},
-#{addr_1},#{addr_2},#{addr_3},#{email},#{phone})
- 	</insert>
+	info_seq.nextval,#{userid},#{userName},
+	#{addr_1},#{addr_2},#{addr_3},#{email},#{phone})
+		</insert>
+		
+		
 --------------------------------------------------------------------------------------------------------------
 1. 쿠폰이 있다면 위의 매서드와 쿼리를 호출
 2. 쿠폰이 없다면 아래의 매서드를 쿼리를 호출
@@ -1718,21 +1766,23 @@ info_seq.nextval,#{userid},#{userName},
 
 
 
+###### 4.OrderService
 
 
-4.OrderService
-@Override
-	   public void insertOrderList(String userid) {
-	      List<OrderInfoVO> vo = mapper.orderList(userid);
-	      int orderno = mapper.searchOrderno(userid);
-	      vo.forEach(order->{
-	         order.setOrderno(orderno);
-	         SaleVO sale = new SaleVO();
-	         sale.setSaleno(order.getSaleno());
-	         sale.setAmount(order.getAmount());
-	         if(sMapper.updateAmount(sale) == 1) {
-	         mapper.insertOrderList(order);
-	         }
+	@Override
+		   public void insertOrderList(String userid) {
+		      List<OrderInfoVO> vo = mapper.orderList(userid);
+		      int orderno = mapper.searchOrderno(userid);
+		      vo.forEach(order->{
+			 order.setOrderno(orderno);
+			 SaleVO sale = new SaleVO();
+			 sale.setSaleno(order.getSaleno());
+			 sale.setAmount(order.getAmount());
+			 if(sMapper.updateAmount(sale) == 1) {
+			 mapper.insertOrderList(order);
+			 }
+			 
+			 
 --------------------------------------------------------------------------------------------------------------
 1. orderList로 회원의 아이디를 넘겨 장바구니에 담은 상품의 상품 번호와 가격, 개수를 vo 에 반환
 2. searchOrderno로 회원의 아이디를 넘겨 방금 추가한 주문 번호를 가져와 orderno 에 할당
@@ -1744,64 +1794,106 @@ info_seq.nextval,#{userid},#{userName},
 
 
 
-5.SaleMapper
-<update id="updateAmount">
-      update sale set amount = amount-#{amount} where saleno = #{saleno} and amount > 0 and amount >= #{amount}
-   </update>
+###### 5.SaleMapper
+
+
+	<update id="updateAmount">
+	      update sale set amount = amount-#{amount} where saleno = #{saleno} and amount > 0 and amount >= #{amount}
+	   </update>
+	   
+	   
 --------------------------------------------------------------------------------------------------------------
-1. 해당 쿼리에서는 상품의 최대 개수이상, 혹은 0이하로 주문이 들어올 경우 주문 완료가 되지않게 해주는 쿼리임
+해당 쿼리에서는 상품의 최대 개수이상, 혹은 0이하로 주문이 들어올 경우 주문 완료가 되지않게 해주는 쿼리임
+
+
+
+
+###### 6.OrderMapper
+
+
+	<insert id="insertOrderList">
+			insert into order_info(orderno,saleno,amount) 
+			values(#{orderno},#{saleno},#{amount})
+		</insert>
+		
 --------------------------------------------------------------------------------------------------------------
-6.OrderMapper
-<insert id="insertOrderList">
- 		insert into order_info(orderno,saleno,amount) 
- 		values(#{orderno},#{saleno},#{amount})
- 	</insert>
---------------------------------------------------------------------------------------------------------------
-1. 해당 쿼리에서는 주문 내역을 저장하는 쿼리임
---------------------------------------------------------------------------------------------------------------
-7.HomeController
-public String orderPost(OrderSaleVO vo) {
-		Cmapper.deleteUser(vo.getUserid());
-		}
+해당 쿼리에서는 주문 내역을 저장하는 쿼리임
+
+
+
+
+###### 7.HomeController
+
+
+	public String orderPost(OrderSaleVO vo) {
+			Cmapper.deleteUser(vo.getUserid());
+	}
+
+
 --------------------------------------------------------------------------------------------------------------
 1. 회원 아이디를 Mapper에 넘겨 장바구니 내역을 삭제
 --------------------------------------------------------------------------------------------------------------
-8.CartMapper
-<delete id="deleteUser">
- 		delete from sale_cart where userid = #{userid}
- 	</delete>
---------------------------------------------------------------------------------------------------------------
-1. 받아온 회원 아이디로 회원 아이디로 저장되어있는 장바구니 내역을 삭제
---------------------------------------------------------------------------------------------------------------
-9.HomeController
-CouponVO coupon = new CouponVO();
-		
-		coupon.setCpnum(vo.getCpnum());
-		coupon.setUserid(vo.getUserid());
-		
-		Sservice.deleteCoupon(coupon);
-		
-		return "redirect:/complete";
-}
---------------------------------------------------------------------------------------------------------------
-1. 쿠폰 번호와 회원 아이디를 deleteCounpon매서드로 보냄
---------------------------------------------------------------------------------------------------------------
 
 
 
 
-10.CouponService
-@Override
+###### 8.CartMapper
+
+
+	<delete id="deleteUser">
+		delete from sale_cart where userid = #{userid}
+	</delete>
+	
+	
+--------------------------------------------------------------------------------------------------------------
+받아온 회원 아이디로 회원 아이디로 저장되어있는 장바구니 내역을 삭제
+
+
+
+
+###### 9.HomeController
+
+
+	CouponVO coupon = new CouponVO();
+
+			coupon.setCpnum(vo.getCpnum());
+			coupon.setUserid(vo.getUserid());
+
+			Sservice.deleteCoupon(coupon);
+
+			return "redirect:/complete";
+	}
+	
+	
+--------------------------------------------------------------------------------------------------------------
+쿠폰 번호와 회원 아이디를 deleteCounpon매서드로 보냄
+
+
+
+
+###### 10.CouponService
+
+
+	@Override
 	public boolean deleteCoupon(CouponVO vo) {
 		return mapper.deleteCoupon(vo) > 0;
 	}
+	
+	
 --------------------------------------------------------------------------------------------------------------
-1. 삭제 처리를 위한 매퍼 호출 수행이 되지않는 다면 0이 넘어와 false 수행된다면 true 반환
---------------------------------------------------------------------------------------------------------------
-11.CouponMapper
-<delete id="deleteCoupon">
+삭제 처리를 위한 매퍼 호출 수행이 되지않는 다면 0이 넘어와 false 수행된다면 true 반환
+
+
+
+
+###### 11.CouponMapper
+
+
+	<delete id="deleteCoupon">
 		delete from coupon_member where cpnum = #{cpnum} and userid = #{userid}
 	</delete>
+	
+
 --------------------------------------------------------------------------------------------------------------
 1. 회원 아이디와 쿠폰 번호를 조회해 일치하는 정보를 삭제 쿠폰이 없다면 0이 넘어오기떄문에
 결과를 0 으로 반환하여 Serivce에서 false를 반환하게 되고 삭제 처리가 되었다면 1이 넘어가서 true를 반환하게 됨
@@ -1811,66 +1903,116 @@ CouponVO coupon = new CouponVO();
 
 
 
+##### 2.6 결제내역 조회
 
-2.6 결제내역 조회
-1.MyPageController
-@PreAuthorize("isAuthenticated()")
+
+###### 1.MyPageController
+
+	@PreAuthorize("isAuthenticated()")
 	@GetMapping("/order")
 	public void order(Criteria cri,Model model,Principal prin) {
 		String userid = prin.getName();
 		model.addAttribute("list",Oservice.getOrderList(userid));
 	}
+	
 --------------------------------------------------------------------------------------------------------------
 1. 현재 로그인 되어있는 회원의 아이디를 userid 할당
 2. 회원 아이디(userid)를 넘겨주며 getOrderList를 호출 (Oservice == orderService)
 --------------------------------------------------------------------------------------------------------------
-2.OrderService
+
+
+
+
+###### 2.OrderService
+
 	public List<Integer> getOrderno(String userid) {
 		return mapper.getOrderno(userid);
 	}
-3.OrderMapper
-<select id="getOrderno" resultType="int">
+
+
+
+
+###### 3.OrderMapper
+
+
+	<select id="getOrderno" resultType="int">
  		select orderno from order_sale where userid = #{userid} order by orderno
  	</select>
+	
 --------------------------------------------------------------------------------------------------------------
 1. 넘겨 받은 userid 를 조회하여 일치하는 내역을 출력하여 그 값을 반환
 2. 반환된 값을 Controller의 list 에 담아 페이지에 출력해줌
-3. 유기견 관리
+--------------------------------------------------------------------------------------------------------------
 
-3.1 유기견 등록
-1.AdoptController
+
+
+
+#### 3. 유기견 관리
+
+
+
+
+##### 3.1 유기견 등록
+
+
+###### 1.AdoptController
+
+
 	public String adoptUpload(DogsVO vo, RedirectAttributes rttr) {
 		aService.register(vo);
 		rttr.addFlashAttribute("result","
-등록이 완료되었습니다. 관리자가 승인 시 목록에 표시되어집니다.");
+	등록이 완료되었습니다. 관리자가 승인 시 목록에 표시되어집니다.");
 		return "redirect:/adopt/adoptList";
 	}
+	
+	
 --------------------------------------------------------------------------------------------------------------
-1. 페이지에서 받은 유기견의 정보를 vo 에 담아 adoptService의 register로 넘기며 호출
---------------------------------------------------------------------------------------------------------------
-2.AdoptService
+페이지에서 받은 유기견의 정보를 vo 에 담아 adoptService의 register로 넘기며 호출
+
+
+
+
+###### 2.AdoptService
+
+
 	public void register(DogsVO vo) {
 		mapper.register(vo);
 		if(vo.getAttachImage() == null) {
 			return;
 		}
 		imgMapper.insertDogs(vo.getAttachImage());
-}
+	}
+	
+	
 --------------------------------------------------------------------------------------------------------------
-1. mapper에 vo 를 넘기고 쿼리를 수행 이미지 여부에따라 추가 매서드 호출을 함
-3.AdoptMapper
-<insert id="register" >
+mapper에 vo 를 넘기고 쿼리를 수행 이미지 여부에따라 추가 매서드 호출을 함
+
+
+
+
+###### 3.AdoptMapper
+
+
+	<insert id="register" >
 		insert into dogs(dogno, userid, dogname, kind, age, pre, gender, detail )
 		values (dogs_seq.nextval, #{userid}, #{dogName}, #{kind}, #{age}, #{pre}, #{gender}, #{detail} )
 	</insert>
-4.ImageMapper
-<insert id="insertDogs">
+	
+		
+
+
+###### 4.ImageMapper
+
+
+	<insert id="insertDogs">
 		<selectKey keyProperty="dogno" order="BEFORE" resultType="int">
 			select count(*) as dogno from dogs
 		</selectKey>
 		insert into dogs_img(uuid,imagepath,filename,dogno) 
 		values(#{uuid},#{imagePath},#{fileName},#{dogno})
 	</insert>
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. 이미지가 없다면 AdoptMapper의 쿼리만 수행
 2. 이미지가 있다면 ImageMapper도 수행
@@ -1881,55 +2023,110 @@ CouponVO coupon = new CouponVO();
 
 
 
-3.1 유기견 목록
-1.AdoptController
-@GetMapping("/adopt/adoptList")
+##### 3.1 유기견 목록
+
+
+
+
+###### 1.AdoptController
+
+
+	@GetMapping("/adopt/adoptList")
 	public void adoptAdoptDog(Criteria cri,Model model) {
 		model.addAttribute("list", aService.getDogsUserList(cri));
 	}
-2.AdoptService
+
+
+
+
+###### 2.AdoptService
+
+
 	public List<DogsVO> getDogsUserList(Criteria cri) {
 		return mapper.getDogsUserList(cri);
 	}
-3.AdoptMapper
-<select id="getDogsUserList" resultMap="dogsMap">
-		select 
-		d.dogno, d.userid, dogname, kind, age, pre, 
-		decode(gender, '1', '수컷', '2', '암컷') gender,detail, updatedate, 
-adopt,uuid,imagePath,filename
-		from dogs d, dogs_img i
-		where d.dogno = i.dogno and adopt = 1 and
-		d.dogno > 0 order by d.dogno desc
+
+
+
+
+###### 3.AdoptMapper
+
+
+	<select id="getDogsUserList" resultMap="dogsMap">
+			select 
+			d.dogno, d.userid, dogname, kind, age, pre, 
+			decode(gender, '1', '수컷', '2', '암컷') gender,detail, updatedate, 
+	adopt,uuid,imagePath,filename
+			from dogs d, dogs_img i
+			where d.dogno = i.dogno and adopt = 1 and
+			d.dogno > 0 order by d.dogno desc
 	</select>
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. 다른 기능들 중 목록을 나타내는 기능의 동작 원리가 비슷함
 2. 조건문으로는 유기견이 분양상태가 아니여야한다는 조건이있음
-3.3 유기견 상세페이지
-1.AdoptController
+--------------------------------------------------------------------------------------------------------------
+
+
+
+
+##### 3.3 유기견 상세페이지
+
+
+###### 1.AdoptController
+
+
 	public void adoptDogProfile(DogsVO vo,Criteria cri, Model model) {
 		int dogno = vo.getDogno();
 		model.addAttribute("dogs" , aService.getDogProfile(dogno));
 	}
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. 페이지에서 get방식으로 넘겨받은 유기견 고유 번호를 dogno라는 변수에 할당
 2. service의 getDogProfile의 파라메터값으로 유기견 번호(dogno)를 담아 호출
 --------------------------------------------------------------------------------------------------------------
-2.AdoptService
+
+
+
+
+###### 2.AdoptService
+
+
 	public DogsVO getDogProfile(int dogno) {
 		return mapper.getDogProfile(dogno);
 	}
-3.AdoptMapper
-<select id="getDogProfile" resultMap="dogsMap">
-	select d.dogno,dogname, kind, age, pre, 
-	decode(gender, '1', '수컷', '2', '암컷') gender,
-detail,uuid,imagePath,filename 
-	from dogs d,dogs_img I where d.dogno = i.dogno and d.dogno = #{dogno}
-</select>
+
+
+
+
+###### 3.AdoptMapper
+
+
+	<select id="getDogProfile" resultMap="dogsMap">
+		select d.dogno,dogname, kind, age, pre, 
+		decode(gender, '1', '수컷', '2', '암컷') gender,
+	detail,uuid,imagePath,filename 
+		from dogs d,dogs_img I where d.dogno = i.dogno and d.dogno = #{dogno}
+	</select>
+	
+	
 --------------------------------------------------------------------------------------------------------------
-1. 유기견의 고유번호에 맞는 유기견의 정보들을 VO형식으로 반환
-3.4 유기견 분양 신청
-1.AdoptController
-@PreAuthorize("isAuthenticated()")
+유기견의 고유번호에 맞는 유기견의 정보들을 VO형식으로 반환
+
+
+
+
+##### 3.4 유기견 분양 신청
+
+
+
+
+###### 1.AdoptController
+
+
+	@PreAuthorize("isAuthenticated()")
 	@GetMapping("/adopt/adoptProcess")
 	public void adoptAdoptProcess(Principal prin, Criteria cri, Model model,DogsVO vo) {
 		String userid = prin.getName();
@@ -1937,222 +2134,358 @@ detail,uuid,imagePath,filename
 		model.addAttribute("member", aService.getMember(userid));
 		model.addAttribute("dogs", aService.getDogProfile(dogno));
 	}
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. 유기견 상세 페이지에서 분양 신청 버튼을 누르면 분양에 필요한 정보를 작성하는 페이지로 이동하게 되면서 현재 로그인 되어있는 회원의 아이디를 userid에 할당
 2. 선택한 유기견의 고유 번호를 dogno 에 할당
 3. getMember 매서드에서는 회원 정보를 받아오는 쿼리를 수행해 가져오고
 4. getDogProfile 매서드에서는 유기견의 정보를 가져오는 쿼리를 수행하여 페이지에 출력함
 --------------------------------------------------------------------------------------------------------------
-2.AdoptController
+
+
+
+
+###### 2.AdoptController
+
+
 	@PostMapping("/adopt/adoptRequest")
 	public String adoptAdoptRequest(AdoptVO vo, Model model,RedirectAttributes rttr) {
 		aService.adoptRequest(vo);
 		rttr.addFlashAttribute("result","입양 신청되었습니다. 관리자가 확인 후 연락드리겠습니다.");
 		return "redirect:/adopt/adoptList";
+		
+		
 --------------------------------------------------------------------------------------------------------------
-1. 분양 신청 페이지에서 작성한 정보들을 vo에 담아 Service를 호출
---------------------------------------------------------------------------------------------------------------
-3.AdoptService
-public void adoptRequest(AdoptVO vo) {
-		mapper.getRequest(vo);
-	}
-4.AdoptMapper
-<insert id="getRequest">
-		insert into dogs_adopt(
-bno, dogno, userid, userName, phone, addr_1, addr_2, addr_3, reason)
-values (dogno_adopt_seq.nextval, #{dogno}, #{userid}, #{userName}, #{phone}, #{addr_1}, #{addr_2}, #{addr_3}, #{reason})
-	</insert>
---------------------------------------------------------------------------------------------------------------
-1. 회원이 작성한 정보들을 DB에 저장
---------------------------------------------------------------------------------------------------------------
-5.AdoptController
-public String adoptAdoptRequest(AdoptVO vo, Model model,RedirectAttributes rttr) {
-rttr.addFlashAttribute("result","
-입양 신청되었습니다. 관리자가 확인 후 연락드리겠습니다.");
-		return "redirect:/adopt/adoptList";
---------------------------------------------------------------------------------------------------------------
-1. DB에 저장이 되었다면 adoptList로 redirect 시키며 alert창을 출력함
-4. 부가서비스
+분양 신청 페이지에서 작성한 정보들을 vo에 담아 Service를 호출
 
-4.1 이벤트 목록
-1.EventController
-@GetMapping("/event")
-	public void event(Criteria cri,Model model) {
-		cri.setAmount(5);
-		model.addAttribute("list",service.getEvent(cri));
-		model.addAttribute("pageMaker",new PageDTO(cri,service.getEventCount(cri)));
+
+
+
+###### 3.AdoptService
+
+
+	public void adoptRequest(AdoptVO vo) {
+			mapper.getRequest(vo);
 	}
+
+
+
+
+###### 4.AdoptMapper
+
+
+	<insert id="getRequest">
+			insert into dogs_adopt(
+	bno, dogno, userid, userName, phone, addr_1, addr_2, addr_3, reason)
+	values (dogno_adopt_seq.nextval, #{dogno}, #{userid}, #{userName}, #{phone}, #{addr_1}, #{addr_2}, #{addr_3}, #{reason})
+	</insert
+	
+	
+--------------------------------------------------------------------------------------------------------------
+회원이 작성한 정보들을 DB에 저장
+
+
+
+
+###### 5.AdoptController
+
+
+	public String adoptAdoptRequest(AdoptVO vo, Model model,RedirectAttributes rttr) {
+	rttr.addFlashAttribute("result","
+	입양 신청되었습니다. 관리자가 확인 후 연락드리겠습니다.");
+			return "redirect:/adopt/adoptList";
+			
+
+--------------------------------------------------------------------------------------------------------------
+DB에 저장이 되었다면 adoptList로 redirect 시키며 alert창을 출력함
+
+
+
+
+#### 4. 부가서비스
+
+
+
+
+##### 4.1 이벤트 목록
+
+
+###### 1.EventController
+
+
+	@GetMapping("/event")
+		public void event(Criteria cri,Model model) {
+			cri.setAmount(5);
+			model.addAttribute("list",service.getEvent(cri));
+			model.addAttribute("pageMaker",new PageDTO(cri,service.getEventCount(cri)));
+	}
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. 한 페이지에 출력할 최대 게시물 개수를 5개로 지정(setAmount)
 2. service의 getEvent로 cri를 파라메터 값을 넘겨 이벤트 정보를 가져옴
 3. service의 getEventCount로 cri를 파라메터 값을 넘겨 이벤트 개수를 가져와 페이징 처리
 --------------------------------------------------------------------------------------------------------------
-2.EventService
+
+
+
+
+###### 2.EventService
+
+
 	public List<BoardEventVO> getEvent(Criteria cri) {
 		return mapper.getEvent(cri);
 	}
 	public int getEventCount(Criteria cri) {
 		return mapper.getEventCount(cri);
 
+
 --------------------------------------------------------------------------------------------------------------
-1. 두 매서드 모두 매퍼의 쿼리를 수행하도록 하는 매서드
-3.EventMapper
-<select id="getEvent" resultMap="eventMap">
-		select 
-		bno,userid,title,sub,content,updatedate,enddate,good,uuid,imagepath,filename
-		from (select 
-		rownum rn,b.bno,b.userid,title,sub,content,updatedate,
-enddate,good,uuid,imagepath,filename 
-		from board_ev b,board_ev_img i
-		where b.bno = i.bno and
-		<include refid="criteria"/>
-	 	<![CDATA[
-	 		rownum <= #{pageNum} * #{amount})
-	 		where (rn > (#{pageNum}-1) * #{amount})
-	 	]]>
-	<select id="getEventCount" resultType="int">
-		select count(*) from board_ev where
-	 	<include refid="criteria"/>
-	 	<![CDATA[
-	 		bno > 0
-	 	]]>
+두 매서드 모두 매퍼의 쿼리를 수행하도록 하는 매서드
+
+
+
+
+###### 3.EventMapper
+
+
+	<select id="getEvent" resultMap="eventMap">
+			select 
+			bno,userid,title,sub,content,updatedate,enddate,good,uuid,imagepath,filename
+			from (select 
+			rownum rn,b.bno,b.userid,title,sub,content,updatedate,
+	enddate,good,uuid,imagepath,filename 
+			from board_ev b,board_ev_img i
+			where b.bno = i.bno and
+			<include refid="criteria"/>
+			<![CDATA[
+				rownum <= #{pageNum} * #{amount})
+				where (rn > (#{pageNum}-1) * #{amount})
+			]]>
+		<select id="getEventCount" resultType="int">
+			select count(*) from board_ev where
+			<include refid="criteria"/>
+			<![CDATA[
+				bno > 0
+			]]>
+			
+			
 --------------------------------------------------------------------------------------------------------------
 1. 위의 쿼리로 이벤트 정보를 가져오고 eventVO에 반환
 2. 아래의 쿼리로 이벤트의 개수를 가져와 페이징 처리를 함
 3. 이벤트의 정보와 이벤트의 개수를 해당 페이지에 출력
 --------------------------------------------------------------------------------------------------------------
-4.2 이벤트 상세페이지
-1.EventController
-@GetMapping("/detail")
-	public void eventDetail(@Param("bno") int bno,
-@ModelAttribute("cri") Criteria cri,Model model) {
-		model.addAttribute("event",service.getEventInfo(bno));
+
+
+
+
+##### 4.2 이벤트 상세페이지
+
+
+###### 1.EventController
+
+
+	@GetMapping("/detail")
+		public void eventDetail(@Param("bno") int bno,
+	@ModelAttribute("cri") Criteria cri,Model model) {
+			model.addAttribute("event",service.getEventInfo(bno));
 	}
+	
+	
 --------------------------------------------------------------------------------------------------------------
-1. get 방식으로 bno 번호를 받아와 service의 getEventInfo 메서드의 파라메터 값으로 넘김
+get 방식으로 bno 번호를 받아와 service의 getEventInfo 메서드의 파라메터 값으로 넘김
+
+
+
+
+###### 2.EventService
+
+
+	@Override
+		public BoardEventVO getEventInfo(int bno) {
+			return mapper.getEventInfo(bno);
+		}
+	3.EventMapper
+	<select id="getEventInfo" resultMap="eventMap">
+			select bno,userid,	title,sub,	content,updatedate,enddate,good
+			from board_ev 
+			where bno = #{bno}
+		</select>
+		
+		
 --------------------------------------------------------------------------------------------------------------
-2.EventService
-@Override
-	public BoardEventVO getEventInfo(int bno) {
-		return mapper.getEventInfo(bno);
+Controller와 Serivce를 거쳐 넘어온 bno 값을 비교하여 일치하는 이벤트 게시글 번호에 맞는 게시물의 제목,내용 등을 BoerdEventVO에 반환하여 해당 페이지에 출력
+
+
+
+
+##### 4.3 FAQ
+
+
+
+
+###### 1.ServiceController
+
+
+	@GetMapping("/faq")
+		public void faq(Criteria cri, Model model) {
+			cri.setAmount(10);
+			model.addAttribute("faq", fService.faqList(cri));
+			model.addAttribute("pageMaker", new PageDTO(cri, fService.faqCount(cri)));
 	}
-3.EventMapper
-<select id="getEventInfo" resultMap="eventMap">
-		select bno,userid,	title,sub,	content,updatedate,enddate,good
-		from board_ev 
-		where bno = #{bno}
-	</select>
---------------------------------------------------------------------------------------------------------------
-1. Controller와 Serivce를 거쳐 넘어온 bno 값을 비교하여 일치하는 이벤트 게시글 번호에 맞는 게시물의 제목,내용 등을 BoerdEventVO에 반환하여 해당 페이지에 출력
-4.3 FAQ
-1.ServiceController
-@GetMapping("/faq")
-	public void faq(Criteria cri, Model model) {
-		cri.setAmount(10);
-		model.addAttribute("faq", fService.faqList(cri));
-		model.addAttribute("pageMaker", new PageDTO(cri, fService.faqCount(cri)));
-	}
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. 한 페이지에 출력할 게시물 수를 10개로 할당( setAmount )
 2. faqList 매서드로 faq 정보를 출력
 3. faqCount로 페이징 처리
 --------------------------------------------------------------------------------------------------------------
-2.FaqService
+
+
+
+
+###### 2.FaqService
+
+
 	public List<BoardFaqVO> faqList(Criteria cri) {
 		return mapper.faqList(cri);
 	}
 	public int faqCount(Criteria cri) {
 		return mapper.faqCount(cri);
 	}
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. 위의 매서드는 FAQ 정보들을 가져어고
 2. 아래 매서드는 페이징에 필요한 총 게시물 수를 가져옴
 --------------------------------------------------------------------------------------------------------------
-3.FaqMapper
-<select id="faqList" resultType="kr.icia.domain.BoardFaqVO">
-		select bno,title,content
-		from (select rownum rn,bno,title,content
-		from board_faq
-		where
-		<include refid="faqCriteria" />
-		<![CDATA[
-			rownum <= #{pageNum} * #{amount})
-	 		where (rn > (#{pageNum}-1) * #{amount}) 
-	 		order by bno desc
-		]]>
+
+
+
+
+###### 3.FaqMapper
+
+
+	<select id="faqList" resultType="kr.icia.domain.BoardFaqVO">
+			select bno,title,content
+			from (select rownum rn,bno,title,content
+			from board_faq
+			where
+			<include refid="faqCriteria" />
+			<![CDATA[
+				rownum <= #{pageNum} * #{amount})
+				where (rn > (#{pageNum}-1) * #{amount}) 
+				order by bno desc
+			]]>
 	</select>
-<select id="faqCount" resultType="int">
-		select count(bno) from board_faq where
-		<include refid="faqCriteria" />
-		<![CDATA[
-			bno > 0
-		]]>
+	<select id="faqCount" resultType="int">
+			select count(bno) from board_faq where
+			<include refid="faqCriteria" />
+			<![CDATA[
+				bno > 0
+			]]>
 	</select>
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. 위의 쿼리는 FAQ 정보들을 가져오는 쿼리
 2. 아래의 쿼리는 전체 FAQ 개수를 가져오는 쿼리
 3. Cotroller로 정보들을 넘겨 페이지에 출력을 해줌
 --------------------------------------------------------------------------------------------------------------
-4.4 실시간 상담
-1. 실시간 상담 - API
-   <script type="text/javascript">
-      tocplusTop = 1150;  tocplusLeft = 5;
-      tocplusMinimizedImage = 'http://kr03.tocplus007.com/img/minimized_ko.gif';
-      tocplusHAlign = 'right';  tocplusWidth = 200;
-      tocplusHeight = 240;
-      tocplusUserName = '집사님';
-      tocplusFrameColor = '#FFA500';
-      tocplusFloatingWindow = true;
-      var tocplusHost = (("https:" == document.location.protocol) ? "https://"
-            : "http://");
-      document.write(unescape("%"
-                  + "3Cscript src='"
-                  + tocplusHost
-                  +"kr03.tocplus007.com/chatLoader.do?userId=chldlsgn00' type='text/javascript'"
-                  + "%" + "3E" + "%" + "3C/script" + "%" + "3E"));
-   </script>
---------------------------------------------------------------------------------------------------------------
-1. TocPlus API를 적용
---------------------------------------------------------------------------------------------------------------
 
 
-4.5 받은 쪽지
-1.MyPageController
-@PreAuthorize("isAuthenticated()")
+
+
+##### 4.4 실시간 상담
+
+
+
+
+###### 1. 실시간 상담 - API
+
+
+	   <script type="text/javascript">
+	      tocplusTop = 1150;  tocplusLeft = 5;
+	      tocplusMinimizedImage = 'http://kr03.tocplus007.com/img/minimized_ko.gif';
+	      tocplusHAlign = 'right';  tocplusWidth = 200;
+	      tocplusHeight = 240;
+	      tocplusUserName = '집사님';
+	      tocplusFrameColor = '#FFA500';
+	      tocplusFloatingWindow = true;
+	      var tocplusHost = (("https:" == document.location.protocol) ? "https://"
+		    : "http://");
+	      document.write(unescape("%"
+			  + "3Cscript src='"
+			  + tocplusHost
+			  +"kr03.tocplus007.com/chatLoader.do?userId=chldlsgn00' type='text/javascript'"
+			  + "%" + "3E" + "%" + "3C/script" + "%" + "3E"));
+	   </script>
+	   
+	   
+--------------------------------------------------------------------------------------------------------------
+TocPlus API를 적용
+
+
+
+
+###### 4.5 받은 쪽지
+
+
+###### 1.MyPageController
+
+
+	@PreAuthorize("isAuthenticated()")
 	@GetMapping("/getRecvMail")
 	public String getRecvMail(Principal principal,RedirectAttributes rttr) {
 		String userid = principal.getName();
 		rttr.addFlashAttribute("recv",Nservice.getRecvList(userid));
 		return "redirect:/mypage/recvmail";
 	}
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. principal 로 현재 로그인 중인 회원의 아이디를 userid에 할당
 2. 그 값을 getRecvList의 파라메터 값으로 넘겨 호출
 3. 받은 메일 페이지로 redirect 시키며 getRecvList에서 받은 값을 넘김
 --------------------------------------------------------------------------------------------------------------
-2.NoteService
-@Override
+
+
+
+
+###### 2.NoteService
+
+
+	@Override
 	public List<NoteVO> getRecvList(String userid) {
 		return mapper.getRecvList(userid);
 	}
+	
+	
 --------------------------------------------------------------------------------------------------------------
-1. Controller 에서 넘겨받은 userid 를 mapper로 넘겨주며 호출, 결과 값을 반환
---------------------------------------------------------------------------------------------------------------
+Controller 에서 넘겨받은 userid 를 mapper로 넘겨주며 호출, 결과 값을 반환
 
-3.NoteMapper
-<select id="getRecvList" resultType="kr.icia.domain.NoteVO">
-	 		select noteno,  sentid, recvid, title, content, sentdate, 
-	 		readdate, recvread,sentdel,recvdel
-	 		from 
-	 		(select /*+index_desc(note noteno)*/
-	 		rownum rn, noteno, sentid,recvid,title, content, sentdate, readdate, 
-	 		decode(recvread,0,'읽지않음',1,'읽음') as recvread,
-			decode(sentdel,0,'전송완료',1,'삭제') as sentdel,
-			decode(recvdel,0,'전송완료',1,'삭제') as recvdel
-			from note 
-	 		where 	
-	 		recvid = #{userid})
+
+
+
+###### 3.NoteMapper
+
+
+	<select id="getRecvList" resultType="kr.icia.domain.NoteVO">
+				select noteno,  sentid, recvid, title, content, sentdate, 
+				readdate, recvread,sentdel,recvdel
+				from 
+				(select /*+index_desc(note noteno)*/
+				rownum rn, noteno, sentid,recvid,title, content, sentdate, readdate, 
+				decode(recvread,0,'읽지않음',1,'읽음') as recvread,
+				decode(sentdel,0,'전송완료',1,'삭제') as sentdel,
+				decode(recvdel,0,'전송완료',1,'삭제') as recvdel
+				from note 
+				where 	
+				recvid = #{userid})
 	 </select>
+	 
+	 
 --------------------------------------------------------------------------------------------------------------
 1. 받은 쪽지 DB에서 service로 부터 넘겨받은 userid 에 일치하는 쪽지를 가져옴
 2. 해당 쪽지들을 출력해줌
@@ -2161,126 +2494,197 @@ enddate,good,uuid,imagepath,filename
 
 
 
+##### 4.받은 쪽지함
 
 
-4.받은 쪽지함
-<c:if test="${recv.recvread == '읽음' }">
-<a style="color: gray;">제목>
-<c:if test="${recv.recvread == '읽지않음' }">
-<a>제목</a>
+	<c:if test="${recv.recvread == '읽음' }">
+	<a style="color: gray;">제목>
+	<c:if test="${recv.recvread == '읽지않음' }">
+	<a>제목</a>
+	
+	
 --------------------------------------------------------------------------------------------------------------
-1. 받은 쪽지함 페이지에서 읽은 쪽지의 제목의 글씨색을 회색으로 바꾸어줌
---------------------------------------------------------------------------------------------------------------
+받은 쪽지함 페이지에서 읽은 쪽지의 제목의 글씨색을 회색으로 바꾸어줌
+
+
+
+
+![9](https://user-images.githubusercontent.com/55867290/71567821-47f08f80-2b05-11ea-8e07-2323883e7ef7.png)
 --------------------------------------------------------------------------------------------------------------
 1. 위의 쪽지는 읽지않은 쪽지
 2. 아래의 쪽지는 읽은 쪽지
 --------------------------------------------------------------------------------------------------------------
 
-5.NoteConroller
-@ResponseBody
+
+
+
+###### 5.NoteConroller
+
+
+	@ResponseBody
 	public ResponseEntity<String> getRecvCount(Principal prin) {
 			String userid = prin.getName();
 			String mail = Nservice.getRecvCount(userid);
 		return new ResponseEntity<>(mail,HttpStatus.OK);
 	}
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. Principal로 현재 로그인 중인 회원의 아이디를 가져와 userid에 할당
 2. 회원의 아이디(userid)를 getRecvCount 매서드의 파라메터 값으로 넘기고 호출
 --------------------------------------------------------------------------------------------------------------
-6.NoteService
-@Override
+
+
+
+
+###### 6.NoteService
+
+
+	@Override
 	public String getRecvCount(String userid) {
 		return mapper.getRecvCount(userid);
 	}
-7.NoteMapper
-<select id="getRecvCount" resultType="String">
- 		select count(*) from note where recvid = #{userid} and recvread = 0
- 	</select>
+
+
+
+
+###### 7.NoteMapper
+
+
+	<select id="getRecvCount" resultType="String">
+			select count(*) from note where recvid = #{userid} and recvread = 0
+	</select>
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. Controller와 Service를 거쳐 받은 회원 아이디를 조회하여 해당하는 쪽지들을 가져옴
 2. 동시에 받은 쪽지의 읽기 여부가 읽지 않은 상태(recvread=0) 이여야 함
 --------------------------------------------------------------------------------------------------------------
-8.Header
-mailService.mailCount(function(count) {
-                        $("#mailIcon").html(
-                              '<span class="icon-mail"></span>' + "["
-                                    + count + "]");
-                     });
+
+
+
+
+###### 8.Header
+
+
+	mailService.mailCount(function(count) {
+				$("#mailIcon").html(
+				      '<span class="icon-mail"></span>' + "["
+					    + count + "]");
+			     });
+			     
+			     
+			     
+			     
+![10](https://user-images.githubusercontent.com/55867290/71567826-5179f780-2b05-11ea-9cfe-7bbbc6e0450c.png)
 --------------------------------------------------------------------------------------------------------------
-1. Mapper로 부터 가져온 읽지 않은 메일의 수를 표시해줌
---------------------------------------------------------------------------------------------------------------
+Mapper로 부터 가져온 읽지 않은 메일의 수를 표시해줌
 
 
 
 
 
+##### 4.6 쪽지 보내기
 
 
+###### 1.NoteController
 
 
-
-
-
-4.6 쪽지 보내기
-1.NoteController
-@PostMapping("/writemail")
+	@PostMapping("/writemail")
 	   public String writemail(NoteVO vo,RedirectAttributes rttr,Principal prin) {
 	      String userid = prin.getName();
 	      vo.setSentid(userid);
 	      Nservice.writemail(vo);
 	      return "redirect:/mypage/getSentMail";
 	   }
+	   
+	   
 --------------------------------------------------------------------------------------------------------------
 1. 현재 로그인한 회원의 아이디를 Principal로 가져와 userid 에 할당 
 2. vo에 userid를 담고 writemail 매서드의 파라메터로 vo를 담아 호출
 --------------------------------------------------------------------------------------------------------------
-2.NoteService
-@Override
-	public void writemail(NoteVO vo) {
-		mapper.writemail(vo);		
+
+
+
+
+###### 2.NoteService
+
+
+	@Override
+		public void writemail(NoteVO vo) {
+			mapper.writemail(vo);		
 	}
-3.NoteService
-<insert id="writemail">
+
+
+
+
+###### 3.NoteService
+
+
+	<insert id="writemail">
 		insert into note(noteno,sentid,recvid,title,content) 
 		values(note_seq.nextval,#{sentid},#{recvid},#{title},
 		#{content})
-4.7 보낸 쪽지
-1.MyPageController
-@PreAuthorize("isAuthenticated()")
-	@GetMapping("/getSentMail")
-	public String getSentMail(Principal principal,RedirectAttributes rttr) {
-		String userid = principal.getName();
-		rttr.addFlashAttribute("sent",Nservice.getSentList(userid));
-		return "redirect:/mypage/sentmail";
+	</insert>
+
+
+
+
+##### 4.7 보낸 쪽지
+
+
+###### 1.MyPageController
+
+
+	@PreAuthorize("isAuthenticated()")
+		@GetMapping("/getSentMail")
+		public String getSentMail(Principal principal,RedirectAttributes rttr) {
+			String userid = principal.getName();
+			rttr.addFlashAttribute("sent",Nservice.getSentList(userid));
+			return "redirect:/mypage/sentmail";
 	}
+	
 --------------------------------------------------------------------------------------------------------------
 1. 현재 로그인한 회원의 아이디를 Principal로 가져와 userid 에 할당
 2. getSentList 매서드의 파라메터로 userid 를 넘겨 호출
 --------------------------------------------------------------------------------------------------------------
-2.NoteService
-@Override
-	public List<NoteVO> getSentList(String userid) {<select id="getSentList" resultType="kr.icia.domain.NoteVO">
-	return mapper.getSentList(userid);
+
+
+
+
+###### 2.NoteService
+
+
+	@Override
+		public List<NoteVO> getSentList(String userid) {<select id="getSentList" resultType="kr.icia.domain.NoteVO">
+		return mapper.getSentList(userid);
 	}
+	
+	
 --------------------------------------------------------------------------------------------------------------
-1. Controller에서 넘겨 받은 userid를 Mapper에 넘김
---------------------------------------------------------------------------------------------------------------
+Controller에서 넘겨 받은 userid를 Mapper에 넘김
 
 
-3.NoteMapper
+
+
+
+###### 3.NoteMapper
+
 	<select id="getSentList" resultType="kr.icia.domain.NoteVO">
-	select noteno, sentid, recvid, title, content, sentdate, readdate, 
-	recvread,sentdel,recvdel
-	from 
-	(select /*+index_desc(note noteno)*/
-	rownum rn, noteno, sentid,recvid,title, content, sentdate, readdate, 
-	decode(recvread,0,'읽지않음',1,'읽음') as recvread,
-	decode(sentdel,0,'전송완료',1,'삭제') as sentdel,
-	decode(recvdel,0,'전송완료',1,'삭제') as recvdel
-	from note 
-	where 	
-sentid = #{userid})
+		select noteno, sentid, recvid, title, content, sentdate, readdate, 
+		recvread,sentdel,recvdel
+		from 
+		(select /*+index_desc(note noteno)*/
+		rownum rn, noteno, sentid,recvid,title, content, sentdate, readdate, 
+		decode(recvread,0,'읽지않음',1,'읽음') as recvread,
+		decode(sentdel,0,'전송완료',1,'삭제') as sentdel,
+		decode(recvdel,0,'전송완료',1,'삭제') as recvdel
+		from note 
+		where 	
+		sentid = #{userid})
 	</select>
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. 보낸 쪽지를 조회하는 쿼리로 Service로 부터 넘겨 받은 userid 를 비교하여 일치하는 회원의
 보낸 쪽지 정보를 가져와 출력, 빠른 검색을 위해 index를 사용
@@ -2292,59 +2696,102 @@ sentid = #{userid})
 
 
 
-5. 회원 관리 < 관리자 >
 
-5.1 회원 목록 조회
-1.AdminController
-@GetMapping("/member/member")
+
+
+#### 5. 회원 관리 < 관리자 >
+
+
+
+
+##### 5.1 회원 목록 조회
+
+
+###### 1.AdminController
+
+	@GetMapping("/member/member")
 	public void connectAdmin(Criteria cri,Model model) {
 		model.addAttribute("list",service.getList(cri));
 		model.addAttribute("pageMaker",new PageDTO(cri,service.getMemberCount(cri)));
 	}
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. criteria 에 할당된 기본값(20)에 따라 한 페이지에 20명의 회원 정보만 출력 되도록 하기 위해 PageDTO에 cri 와 getMemberCount 매서드의 결과 값을 파라메터 값으로 줌
 2. 회원의 정보들을 가져오기 위해 cri를 파라메터로 넘겨 getList를 호출
 --------------------------------------------------------------------------------------------------------------
-2.MemberService
-@Override
+
+
+
+
+###### 2.MemberService
+
+
+	@Override
 	public int getMemberCount(Criteria cri) {
 		return mapper.getMemberCount(cri);
 	}
+	
+	
 --------------------------------------------------------------------------------------------------------------
-1. 넘겨 받은 cri 를 다시 Mapper의 파라메터로 다시 넘겨  호출
---------------------------------------------------------------------------------------------------------------
+넘겨 받은 cri 를 다시 Mapper의 파라메터로 다시 넘겨  호출
 
 
-3.MemberMapper
-<select id="getMemberCount" resultType="int">
+
+
+###### 3.MemberMapper
+
+	<select id="getMemberCount" resultType="int">
 	 	select count(userno) from member m,grade g where m.grade = g.grade and  
 	 	<include refid="criteria"/>
 	 	<![CDATA[
 	 		userno > 0
 	 	]]>
 	 </select>
+	 
 --------------------------------------------------------------------------------------------------------------
-1. 회원의 수를 가져오는 쿼리임
---------------------------------------------------------------------------------------------------------------
-4.MemberService
-@Override
+회원의 수를 가져오는 쿼리임
+
+
+
+
+###### 4.MemberService
+
+
+	@Override
 	public List<MemberVO> getList(Criteria cri) {
 		return mapper.getMemberWithPaging(cri);
 	}
-5.MemberMapper
-<select id="getMember" resultMap="memberMap">
+
+
+
+
+###### 5.MemberMapper
+
+	<select id="getMember" resultMap="memberMap">
 	 	select userno, m.grade,tear, username, userid, addr_1,addr_2, addr_3,  phone, 
 	 	email,to_char(birth,'yyyyMMdd') as birth, joindate, 
 	 	decode(enabled,0,'이메일 인증 대기',1,'정상',2,'정지') as enabled,
 	 	report, decode(adopt,0,'무','유') as adopt 
 	 	from member m, grade gwhere m.grade = g.grade and 
 	 	userid = #{userid}
-6.회원 목록 페이지
-<c:if test="${member.report > 4}">
-<a href="./getMember?userid=${member.userid}" class="" style="color:red;">${member.userid}</a>
-</c:if>
-<c:if test="${member.report < 5}">
-<a href="./getMember?userid=${member.userid}" class="">${member.userid}</a></c:if>
+	</select>
+
+
+
+
+###### 6.회원 목록 페이지
+
+
+	<c:if test="${member.report > 4}">
+		<a href="./getMember?userid=${member.userid}" class="" style="color:red;">${member.userid}</a>
+	</c:if>
+	<c:if test="${member.report < 5}">
+		<a href="./getMember?userid=${member.userid}" class="">${member.userid}</a>
+	</c:if>
+
+
+![11](https://user-images.githubusercontent.com/55867290/71567833-58a10580-2b05-11ea-90eb-00feb6c2f459.png)
 --------------------------------------------------------------------------------------------------------------
 1. 목록을 출력할 페이지에서 만약 신고 횟수가 5회 이상 누적되었다면 빨간색으로 표시
 --------------------------------------------------------------------------------------------------------------
@@ -2352,13 +2799,13 @@ sentid = #{userid})
 
 
 
+##### 1.2 회원 정보 변경
 
 
+###### 1.AdminController
 
 
-1.2 회원 정보 변경
-1.AdminController
-@PostMapping("/member/modify")
+	@PostMapping("/member/modify")
 	public String modify(MemberVO vo,RedirectAttributes rttr) {
 		if(service.adminUpdateUser(vo)) {
 			rttr.addFlashAttribute("result","회원정보 수정이 완료되었습니다.");
@@ -2367,62 +2814,104 @@ sentid = #{userid})
 		}
 		return "redirect:/admin/member/member";
 	}
+	
+	
 --------------------------------------------------------------------------------------------------------------
-1. 회원 정보 변경 페이지에서 변경한 값을 vo에 담아 adminUpdateUser의 파라메터로 넘겨 호출
---------------------------------------------------------------------------------------------------------------
-2.MemberService
-@Override
+회원 정보 변경 페이지에서 변경한 값을 vo에 담아 adminUpdateUser의 파라메터로 넘겨 호출
+
+
+
+
+###### 2.MemberService
+
+	@Override
 	public boolean adminUpdateUser(MemberVO vo) {
 		return mapper.adminUpdateUser(vo) == 1;
 	}
-3.MemberMapper
-<update id="adminUpdateUser">
+
+
+
+
+###### 3.MemberMapper
+
+
+	<update id="adminUpdateUser">
 	 	update member set enabled = #{enabled},report = #{report},adopt = #{adopt},
 	 	grade = #{grade.grade},updatedate = sysdate  
 	 	where userno = #{userno}
+	</update>
 
+
+![12](https://user-images.githubusercontent.com/55867290/71567837-6191d700-2b05-11ea-989d-d48fee11b88a.png)
 --------------------------------------------------------------------------------------------------------------
-1. 회원의 계정 정보 중 등급,분양 유무, 계정 상태만 수정이 가능함
---------------------------------------------------------------------------------------------------------------
+회원의 계정 정보 중 등급,분양 유무, 계정 상태만 수정이 가능함
 
 
 
-6. 상품 관리
 
-6.1 상품 목록
-1.AdminController
-@GetMapping("/product/list")
+#### 6. 상품 관리
+
+
+
+
+##### 6.1 상품 목록
+
+
+###### 1.AdminController
+
+
+	@GetMapping("/product/list")
 	public void productList(Criteria cri,Model model) {
 		cri.setAmount(12);
 		model.addAttribute("menu",sService.getCate());
 		model.addAttribute("list",sService.getSale(cri));
 		model.addAttribute("pageMaker",new PageDTO(cri,sService.getCount(cri)));
 	}
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. 한 페이지에 출력할 최대 게시물 수를 12개로 정하기 위해 setAmoun(12) 호출
 2. 카테고리 목록을 받기 위해 getCate를 호출
 3. 상품 목록을 받기위해 카테고리 번호가 있는 cri 와 함께 getSale를 호출 
 4. 페이징 처리를 위해 cri를 getCount 매서드에서 반환한 과 함께 PageDTO의 파라메터로 넘김
 --------------------------------------------------------------------------------------------------------------
-2.SaleService - 관리자 상품 목록 - 2
-@Override
+
+
+
+
+###### 2.SaleService - 관리자 상품 목록 - 2
+
+
+	@Override
 	public List<CateVO> getCate() {
 		return mapper.getCate();
 	}
 
-3.SaleMapper - 관리자 상품 목록 - 3 
-<select id="getCate" resultType="kr.icia.domain.CateVO">
+
+
+
+###### 3.SaleMapper - 관리자 상품 목록 - 3 
+
+
+	<select id="getCate" resultType="kr.icia.domain.CateVO">
 		select * from sale_cate
 	</select>
 
-4.SaleService - 관리자 상품 목록 - 4
-@Override
+
+
+
+###### 4.SaleService - 관리자 상품 목록 - 4
+
+
+	@Override
 	public List<SaleVO> getSale(Criteria cri) {
 		if(cri.getCateno() == 0) {
 			return mapper.getSale(cri);
 		}
 	return mapper.getSaleList(cri);
 	}
+
+
 --------------------------------------------------------------------------------------------------------------
 1. getCate 매서드로 가져와 cri에 담은 정보중 카테고리 번호를 조회 하여 0 일 경우 전체 목록을 출력하는 매서드를 호출
 2. cri에 담긴 카테고리 번호가 0이 아니라면 해당 카테고리 번호와 일치하는 상품의 정보들을 출력하는 매서드를 호출
@@ -2433,61 +2922,94 @@ sentid = #{userid})
 
 
 
-6.2 상품 정보 수정
-1.AdoptController
-@PostMapping("/product/saleInfo")
+###### 6.2 상품 정보 수정
+
+
+	1.AdoptController
+	@PostMapping("/product/saleInfo")
 	public String modify(SaleVO vo,RedirectAttributes rttr) {
 		if (sService.updateSale(vo)) {
 			rttr.addFlashAttribute("result", "success");
 		}
 		return "redirect:/admin/product/list";
 	}
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. 페이지에서 입력한 상품의 정보를 담은 vo를 updateSale 매서드의 파라메터  값으로 넘김
 2. 결과 값이 true 라면 success 라는 alert창을 출력하고 상품 목록 페이지로 redirect 시킴
 3. 결과 값이 false 라면 아무 창도 출력하지 않고 상품 목록 페이지로 redirect 시킴
 --------------------------------------------------------------------------------------------------------------
-2.AdoptService
-@Override
-public boolean updateSale(SaleVO vo) {
-	boolean check = false;
-	if(vo.getAttachImage() == null) {
-		if(mapper.updateSale(vo) == 1) {
-			check = true;
+
+
+
+
+###### 2.AdoptService
+
+
+	@Override
+	public boolean updateSale(SaleVO vo) {
+		boolean check = false;
+		if(vo.getAttachImage() == null) {
+			if(mapper.updateSale(vo) == 1) {
+				check = true;
 			return check;
 		}
 
+
 --------------------------------------------------------------------------------------------------------------
-1. vo에 상품의 이미지가 없다면 상품 정보를 수정하는 updateSale 쿼리를 수행하여 되었으면 check를 true를 할당하여 반환
---------------------------------------------------------------------------------------------------------------
-}else if(vo.getAttachImage() != null){
-			vo.getAttachImage().setSaleno(vo.getSaleno());
-			if(imgMapper.updateSale(vo.getAttachImage()) == 1) {
-				if(mapper.updateSale(vo) == 1) {
-					check = true;
-				}
+vo에 상품의 이미지가 없다면 상품 정보를 수정하는 updateSale 쿼리를 수행하여 되었으면 check를 true를 할당하여 반환
+
+
+
+
+	}else if(vo.getAttachImage() != null){
+		vo.getAttachImage().setSaleno(vo.getSaleno());
+		if(imgMapper.updateSale(vo.getAttachImage()) == 1) {
+			if(mapper.updateSale(vo) == 1) {
+				check = true;
+			}
+			
+			
 --------------------------------------------------------------------------------------------------------------
 1. 이미지가 있다면 상품 이미지 vo 에 상품 번호를 할당
 2. vo의 getAttachImage를 파라메터로 담아 이미지 Mapper의 매서드, updateSale 호출
 3. 반환 값이 1 이라면 updateSale 매서드를 호출하여 상품 정보를 저장 시킴
 --------------------------------------------------------------------------------------------------------------
-3.ImageMapper
-<update id="updateSale">
+
+
+
+
+###### 3.ImageMapper
+
+
+	<update id="updateSale">
 		update sale_img set uuid = #{uuid},imagepath = #{imagePath},
 		filename = #{fileName} 
 		where saleno = #{saleno}
 	</update>
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. 해당 쿼리를 수행하여 상품 이미지로 저장
 2. 상품을 출력할 때 saleno로 조회 하여 일치하는 이미지가 있다면 그 이미지를 출력하고
 3. 없다면 출력하지않는 처리를 함
-4.SaleMapper
-<update id="updateSale">
+--------------------------------------------------------------------------------------------------------------
+
+
+
+
+###### 4.SaleMapper
+
+
+	<update id="updateSale">
 		update sale set salename = #{saleName},cost = #{cost},content = #{content},
-updatedate = sysdate,amount = #{amount},cateno = #{cate.cateno}  
+		updatedate = sysdate,amount = #{amount},cateno = #{cate.cateno}  
 		where 
 		saleno = #{saleno} 
 	</update>
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. Service에서 넘어온 vo에 담긴 정보들을 update 해줌
 --------------------------------------------------------------------------------------------------------------
@@ -2495,29 +3017,29 @@ updatedate = sysdate,amount = #{amount},cateno = #{cate.cateno}
 
 
 
+##### 6.3 상품 등록
 
 
+###### 1.AdoptController
 
 
-
-
-
-
-
-
-
-6.3 상품 등록
-1.AdoptController
-@PostMapping("/product/saleUpload")
+	@PostMapping("/product/saleUpload")
 	public String productUpload(SaleVO vo,RedirectAttributes rttr) {
 		sService.register(vo);
 		return "redirect:/admin/product/list";
 	}
+	
+	
 --------------------------------------------------------------------------------------------------------------
-1. 상품 등록 페이지에서 입력한 정보들을 담은 vo를 Service의 register 로 넘기며 호출
---------------------------------------------------------------------------------------------------------------
-2.SaleService
-@Override
+상품 등록 페이지에서 입력한 정보들을 담은 vo를 Service의 register 로 넘기며 호출
+
+
+
+
+###### 2.SaleService
+
+
+	@Override
 	public void register(SaleVO vo) {
 		mapper.register(vo);
 		if(vo.getAttachImage() == null) {
@@ -2525,24 +3047,39 @@ updatedate = sysdate,amount = #{amount},cateno = #{cate.cateno}
 		}
 		imgMapper.insert(vo.getAttachImage());
 	}
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. Mapper의 register 매서드를 호출하고 업로드한 상품의 이미지가 없다면 동작을 그만두고 반환
 2. 이미지가 있다면 if문을 지나쳐 imgMapper의 insert매서드를 호출하여 이미지를 저장함
 --------------------------------------------------------------------------------------------------------------
 
-3.SaleMapper
-<insert id="register">
+
+
+
+###### 3.SaleMapper
+
+
+	<insert id="register">
 		insert into sale(saleno,salename,cost,content,amount,cateno) 
 		values(sale_seq.nextval,#{saleName},#{cost},#{content},#{amount},#{cate.cateno})
 	</insert>
-4.ImageMapper
-<insert id="insert">
+
+
+
+
+###### 4.ImageMapper
+
+
+	<insert id="insert">
 		<selectKey keyProperty="saleno" order="BEFORE" resultType="int">
 			select max(saleno) as saleno from sale
 		</selectKey>
 		insert into sale_img(uuid,imagepath,filename,saleno) 
 		values(#{uuid},#{imagePath},#{fileName},#{saleno})
 	</insert>
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. 이미지가 없다면 위의 쿼리만 수행
 2. 이미지가 있다면 아래의 쿼리를 수행하게 되는데
@@ -2553,18 +3090,26 @@ updatedate = sysdate,amount = #{amount},cateno = #{cate.cateno}
 
 
 
+##### 6.4 상품 삭제
 
-6.4 상품 삭제
-1.AdminController
-@PostMapping("/product/remove")
+
+###### 1.AdminController
+
+
+	@PostMapping("/product/remove")
 	public String productRemove(SaleVO vo,RedirectAttributes rttr) {
 		if(sService.removeSale(vo)) {
 			rttr.addFlashAttribute("result","success");
 		}
 		return "redirect:/admin/product/list";
 	}
-2.SaleController
-@Transactional
+
+
+
+
+###### 2.SaleController
+
+	@Transactional
 	@Override
 	public boolean removeSale(SaleVO vo) {
 		Cmapper.removeCart(vo.getSaleno());
@@ -2572,114 +3117,228 @@ updatedate = sysdate,amount = #{amount},cateno = #{cate.cateno}
 		imgMapper.removeSaleImage(vo.getSaleno());
 		return mapper.deleteSale(vo.getSaleno()) == 1;
 	}
+	
+	
 --------------------------------------------------------------------------------------------------------------
-1. 해당 상품에 대한 정보가 담긴 모든 테이블의 정보들을 지우기 위해 장바구니,관심상품,이미지,상품정보를 지우는 Mapper의 매서드들을 호출
---------------------------------------------------------------------------------------------------------------
+해당 상품에 대한 정보가 담긴 모든 테이블의 정보들을 지우기 위해 장바구니,관심상품,이미지,상품정보를 지우는 Mapper의 매서드들을 호출
 
 
-3.CartMapper
-<delete id="removeCart">
+
+
+###### 3.CartMapper
+
+	<delete id="removeCart">
  		delete from sale_cart 
  		where saleno= #{saleno}
  	</delete>
-4.GoodMapper
-<delete id="deleteGood">
+
+
+
+
+###### 4.GoodMapper
+
+
+	<delete id="deleteGood">
  		delete from sale_good 
  		where userid = #{userid} and saleno = #{saleno} 
  	</delete>
-5.ImageMapper
-<delete id="removeSaleImage">
+
+
+
+
+###### 5.ImageMapper
+
+
+	<delete id="removeSaleImage">
 		delete from sale_img 
 		where saleno = #{saleno}
 	</delete>
-6.SaleMapper
-<delete id="deleteSale">
+
+
+
+
+
+###### 6.SaleMapper
+
+
+	<delete id="deleteSale">
 		delete from sale where 
 		saleno = #{saleno}
 	</delete>
+	
+	
 --------------------------------------------------------------------------------------------------------------
-1. 위에서부터 장바구니, 관심상품, 이미지, 상품 정보 순으로 쿼리를 수행하여 상품 정보를 지움
---------------------------------------------------------------------------------------------------------------
-7. 유기견관리
+위에서부터 장바구니, 관심상품, 이미지, 상품 정보 순으로 쿼리를 수행하여 상품 정보를 지움
 
-7.1 신청된 유기견 목록
-1.AdminController
-@GetMapping("/dogReg/dogReg")
+
+
+
+#### 7. 유기견관리
+
+
+
+
+##### 7.1 신청된 유기견 목록
+
+
+###### 1.AdminController
+
+
+	@GetMapping("/dogReg/dogReg")
 	public void dogRegDogReg(Criteria cri, Model model) {
 		model.addAttribute("list", aService.getDogsList(cri));
 	}
-2.AdoptService
-@Override
+
+
+
+
+###### 2.AdoptService
+
+
+	@Override
 	public List<DogsVO> getDogsList(Criteria cri) {
 		return mapper.getDogsList(cri);
 	}
-3.AdoptMapper
-<select id="getDogsList" resultMap="dogsMap">
+
+
+
+
+###### 3.AdoptMapper
+
+
+	<select id="getDogsList" resultMap="dogsMap">
 	   select  d.dogno,d.userid,dogname, kind,age,pre, 
 	   decode(gender, '1', '수컷', '2', '암컷') gender,detail,updatedate, 
 	   decode(adopt, '0', '등록 대기', '1', '분양 등록중', '2' , '분양 완료') adopt ,
 	   uuid,imagePath,filename from dogs d,dogs_img i
 	   where d.dogno = i.dogno and d.dogno > 0 order by d.dogno desc
+	</select>
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. 유기견 등록을 신청한 목록을 가져와 출력해주는 과정
 2. 유기견 등록 신청부터 분양 완료되었을 경우에도 출력해주고 목록에 출력이 됨
-7.2 신청된 유기견 상세 페이지
-1.AdminController
-@GetMapping("/dogReg/dRegister")
+--------------------------------------------------------------------------------------------------------------
+
+
+
+
+##### 7.2 신청된 유기견 상세 페이지
+
+
+###### 1.AdminController
+
+
+	@GetMapping("/dogReg/dRegister")
 	public void dogRegdRegister(int dogno, Criteria cri,Model model) {
 		model.addAttribute("dogs", aService.getDogs(dogno));
 	}
-2.AdoptService
+
+
+
+
+###### 2.AdoptService
+
 	public DogsVO getDogs(int dogno) {
 		return mapper.getDogs(dogno);
 	}
-3.AdoptMapper
-<select id="getDogs" resultType="kr.icia.domain.DogsVO">
+
+
+
+
+###### 3.AdoptMapper
+
+	<select id="getDogs" resultType="kr.icia.domain.DogsVO">
 	   select dogno, dogname,userid,kind,age,pre,detail, 
 	   decode(gender, '1', '수컷', '2', '암컷') gender,
 	   decode(adopt, '0', '등록 대기', '1', '분양 등록중', '2' , '분양 완료') adopt 
 	   from dogs  where dogno = #{dogno}
 	</select>
+
+
 --------------------------------------------------------------------------------------------------------------
 1. 신청된 유기견 등록 신청 목록에서 사진을 클릭하면 해당 유기견의 고유 번호(dogno)를 get방식으로 넘겨 DB에서 조회
 2. 조회된 정보들을 DogsVO에 담아 유기견 등록 신청 상세 페이지에 출력
 --------------------------------------------------------------------------------------------------------------
 
-7.3 신청된 유기견 등록
-1.AdminController
-@PostMapping("/dogReg/dogUpdate")
+
+
+
+##### 7.3 신청된 유기견 등록
+
+
+###### 1.AdminController
+
+
+	@PostMapping("/dogReg/dogUpdate")
 	public String dogUpdate(DogsVO vo, RedirectAttributes rttr) {
 		if(aService.update(vo)) {
 			rttr.addFlashAttribute("result","success");
 		}
 		return "redirect:/admin/dogReg/dogReg";
 	}
-2.AdoptService
-public boolean update(DogsVO vo) {
+
+
+
+
+###### 2.AdoptService
+
+
+	public boolean update(DogsVO vo) {
 		return mapper.update(vo) == 1;
 	}
-3.AdoptMapper
-<update id="update">
+
+
+
+
+###### 3.AdoptMapper
+
+
+	<update id="update">
 		update dogs set 
 		apprdate = sysdate,
 		adopt = 1 where dogno = ${dogno}
+	</update>
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. 상세 페이지에서 등록 버튼을 누르게 되면 유기견 등록을 신청한 유저가 입력한 정보들을
 DB에 업데이트되어 분양 상태 번호(adopt)를 분양 신청 상태(adopt=1)로 만들고 분양 신청일(apprdate)을 관리자가 등록한 날로 수정(update)됨
 2. 등록이 되었다면 success 라는 내용의 alert창을 출력하고 유기견 등록 신청한 목록으로 돌아가고 등록이 되지 않았다면 alert창을 출력하지 않고 유기견 등록 신청한 목록으로 돌아감
-7.4 유기견 분양 신청 목록
-1.AdminController
-@GetMapping("/dogAdopt/dogAdopt")
+--------------------------------------------------------------------------------------------------------------
+
+
+
+
+##### 7.4 유기견 분양 신청 목록
+
+
+###### 1.AdminController
+
+
+	@GetMapping("/dogAdopt/dogAdopt")
 	public void dogAdoptDogAdopt(Criteria cri,Model model) {
 		model.addAttribute("list", aService.getRequestList(cri));
 	}
-2.AdoptService
-@Override
+
+
+
+
+###### 2.AdoptService
+
+
+	@Override
 	public List<AdoptVO> getRequestList(Criteria cri) {
 		return mapper.getRequestList(cri);
 	}
-3.AdoptMapper
-<select id="getRequestList" resultMap="adoptMap">
+
+
+
+
+###### 3.AdoptMapper
+
+
+	<select id="getRequestList" resultMap="adoptMap">
 		select bno,a.dogno,a.userid, dogname,phone,addr_1, addr_2, addr_3,
 		uuid,imagePath,filename
 		from dogs_adopt a, dogs_img i,dogs d
@@ -2687,54 +3346,104 @@ DB에 업데이트되어 분양 상태 번호(adopt)를 분양 신청 상태(ado
 		bno > 0 
 		order by bno desc
 	</select>
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. 유기견 등록 신청한 유기견 목록을 출력
 2. 유기견 등록 신청한 상태(adopt=0)여야 목록에 출력이 됨
-7.5 유기견 분양 신청 상세 페이지
-1.AdminController
-@GetMapping("/dogAdopt/adoptAdmit")
-public void dogAdoptAdoptAdmit(int dogno,int bno, Model model) {
-	      model.addAttribute("adopt", aService.getRequestUser(bno));
-	   }
-2.AdoptService
-@Override
-	public AdoptVO getRequestUser(int bno) {
-		return mapper.getRequestUser(bno);
+--------------------------------------------------------------------------------------------------------------
+
+
+
+
+##### 7.5 유기견 분양 신청 상세 페이지
+
+
+###### 1.AdminController
+
+
+	@GetMapping("/dogAdopt/adoptAdmit")
+	public void dogAdoptAdoptAdmit(int dogno,int bno, Model model) {
+		      model.addAttribute("adopt", aService.getRequestUser(bno));
 	}
-3.AdoptMapper
-<select id="getRequestUser" resultType="kr.icia.domain.AdoptVO">
+
+
+
+
+###### 2.AdoptService
+
+	@Override
+		public AdoptVO getRequestUser(int bno) {
+			return mapper.getRequestUser(bno);
+	}
+
+
+
+
+###### 3.AdoptMapper
+
+	<select id="getRequestUser" resultType="kr.icia.domain.AdoptVO">
 		   select d.dogno,a.bno,a.userid,a.userName,phone,
 		   addr_1,addr_2, addr_3,reason
 		   from dogs d,dogs_adopt a
 		   where d.dogno = a.dogno and bno = #{bno}
 		   order by bno desc
+	</select>
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. 유기견 분양 신청 목록 페이지에서 이미지를 클릭할 경우 해당 글의 고유 번호(bno)와 유기견의 고유 번호(dogno)를 get방식으로 넘김
 2. 페이지에서 받은 bno를 Service를 거쳐 Mapper의 쿼리문으로 전달하여 분양 신청 테이블(dog_adopt) 테이블에 저장된 bno와 비교하여 일치하는 게시물 번호의 유기견 고유 번호를 비교하여 일치하는 유기견의 정보와 분양 신청한 회원의 정보를 함께 출력
-7.6 유기견 분양 승인
-1.AdminController
-@PostMapping("/dogAdopt/adoptCompl")
+--------------------------------------------------------------------------------------------------------------
+
+
+
+
+##### 7.6 유기견 분양 승인
+
+
+###### 1.AdminController
+
+
+	@PostMapping("/dogAdopt/adoptCompl")
 	public String dogAdoptAdoptCompl(AdoptVO vo, RedirectAttributes rttr) {
 		if(aService.adopt(vo)) {
 			rttr.addFlashAttribute("result","success");
 		}
 		return "redirect:/admin/dogAdopt/dogAdopt";
 	}
+	
+	
 --------------------------------------------------------------------------------------------------------------
-1. Service의 adopt를 호출하여 true로 반환이 되면 result라는 이름의 속성에 success라는 문자열을 담아 alert창으로 출력하고 유기견 분양 신청 목록으로 redirect 시키고 분양 승인이 되지않아 false를 반환할 경우 alert창을 출력하지않고 유기견 분양 신청 목록으로 redirect 시킴
---------------------------------------------------------------------------------------------------------------
-2.AdoptService
-@Override
+Service의 adopt를 호출하여 true로 반환이 되면 result라는 이름의 속성에 success라는 문자열을 담아 alert창으로 출력하고 유기견 분양 신청 목록으로 redirect 시키고 분양 승인이 되지않아 false를 반환할 경우 alert창을 출력하지않고 유기견 분양 신청 목록으로 redirect 시킴
+
+
+
+
+
+###### 2.AdoptService
+
+
+	@Override
 	public boolean adopt(AdoptVO vo) {
 		boolean check = false;
 		if(Mmapper.updateAdopt(vo.getUserid()) == 1 && mapper.adopt(vo) == 1 && mapper.adoptUser(vo) == 1)
 			check = true;
 		return check;
+		
+		
 --------------------------------------------------------------------------------------------------------------
 1. MemberMapper에서 회원의 분양 상태를 수정
 2. adoptMapper에서 유기견의 분양 상태를 수정
-3.AdoptMapper
-<update id="adopt">
+--------------------------------------------------------------------------------------------------------------
+
+
+
+
+###### 3.AdoptMapper
+
+
+	<update id="adopt">
 	update dogs set adopt = 2,selldate = sysdate 
 	where dogno = #{dogno}
 	</update>
@@ -2742,6 +3451,8 @@ public void dogAdoptAdoptAdmit(int dogno,int bno, Model model) {
 	update dogs_adopt set adopt = 1 
 	where dogno = #{dogno}
 	</update>
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. dogs는 유기견의 상세 정보
 2. dogs_adopt는 유기견 분양 상세 정보
@@ -2750,39 +3461,50 @@ public void dogAdoptAdoptAdmit(int dogno,int bno, Model model) {
 
 
 
+#### 8. 부가 서비스
 
 
 
 
+##### 8.1 이벤트 목록
 
 
+###### 1.AdminController
 
 
-8. 부가 서비스
-8.1 이벤트 목록
-1.AdminController
-@GetMapping("/event/event")
+	@GetMapping("/event/event")
 	public void eventEvent(Criteria cri, Model model) {
 		cri.setAmount(4);
 		model.addAttribute("list",eService.getEvent(cri));
 		model.addAttribute("pageMaker",new PageDTO(cri,eService.getEventCount(cri)));
 	}
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. 페이징 처리를 위해 Criteria의 amount 값을 4로 할당해 줌
 2. 이벤트 목록을 출력하기 위해 cri 를 파라메터 값으로 getEvent를 호출
 3. 페이징 처리를 위해 getEventCount를 호출
 --------------------------------------------------------------------------------------------------------------
-2.EventService
-@Override
+
+
+
+
+###### 2.EventService
+
+
+	@Override
 	public List<BoardEventVO> getEvent(Criteria cri) {
 		return mapper.getEvent(cri);
 	}
 --------------------------------------------------------------------------------------------------------------
-1. Controller에서 넘겨 받은 cri를 Mapper의 getEvent의 파라메터 값으로 넘기며 호출
---------------------------------------------------------------------------------------------------------------
+Controller에서 넘겨 받은 cri를 Mapper의 getEvent의 파라메터 값으로 넘기며 호출
 
-3.EventMapper
-<select id="getEvent" resultMap="eventMap">
+
+
+
+###### 3.EventMapper
+
+	<select id="getEvent" resultMap="eventMap">
 		select bno,userid,title,sub,content,updatedate,enddate,
 		good,uuid,imagepath,filename
 		from (select 
@@ -2796,6 +3518,8 @@ public void dogAdoptAdoptAdmit(int dogno,int bno, Model model) {
 	 		where (rn > (#{pageNum}-1) * #{amount})
 	 	]]>
 	</select>
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. board_ev 테이블에 있는 이벤트 정보를 BoardEventVO에 저장
 2. 썸네일 이미지를 출력하기 위해 board_ev_img 테이블의 고유 번호(uuid), 이미지 경로(imagepath), 파일 이름(filename)도 가져옴 
@@ -2803,43 +3527,64 @@ public void dogAdoptAdoptAdmit(int dogno,int bno, Model model) {
 
 
 
-4.EventService
-@Override
-	public int getEventCount(Criteria cri) {
-		return mapper.getEventCount(cri);
+
+###### 4.EventService
+
+	@Override
+		public int getEventCount(Criteria cri) {
+			return mapper.getEventCount(cri);
 	}
-5.EventMapper
-<select id="getEventCount" resultType="int">
+
+
+
+
+###### 5.EventMapper
+
+
+	<select id="getEventCount" resultType="int">
 		select count(*) from board_ev where
 	 	<include refid="criteria"/>
 	 	<![CDATA[
 	 		bno > 0
 	 	]]>
 	</select>
+	
+	
 --------------------------------------------------------------------------------------------------------------
-1. 페이징 처리를 위해 이벤트 게시판의 게시물의 전체 개수를 가져옴
---------------------------------------------------------------------------------------------------------------
+페이징 처리를 위해 이벤트 게시판의 게시물의 전체 개수를 가져옴
 
 
 
 
+##### 8.2 이벤트 상세페이지
 
 
+###### 1.EventController
 
 
-8.2 이벤트 상세페이지
-1.EventController
-@GetMapping("/detail")
+	@GetMapping("/detail")
 	public void eventDetail(int bno,@ModelAttribute("cri") Criteria cri,Model model) {
 		model.addAttribute("event",service.getEventInfo(bno));
 	}
-2.EventService
-@Override
+
+
+
+
+###### 2.EventService
+
+
+	@Override
 	public BoardEventVO getEventInfo(int bno) {
 		return mapper.getEventInfo(bno);
 	}
-3.EventMapper
-<select id="getEventInfo" resultMap="eventMap">
+
+
+
+
+###### 3.EventMapper
+
+
+	<select id="getEventInfo" resultMap="eventMap">
 		select bno,userid,title,sub,content,updatedate,enddate,good
 		from board_ev 
 		where bno = #{bno}
@@ -2849,15 +3594,28 @@ public void dogAdoptAdoptAdmit(int dogno,int bno, Model model) {
 2. 쿼리문에서는 이미지를 추출해내는 부분이 없지만 MyBatis의 collection 태그의 기능으로 bno에 걸려있는 외래키를 통해 이벤트 게시판 이미지 테이블(board_ev_img)에서 동일한 bno 의 이미지를 정보들을 가져와 출력
 --------------------------------------------------------------------------------------------------------------
 
-8.3 이벤트 등록
-1.AdminController
-@PostMapping("/event/eventUpload")
+
+
+
+##### 8.3 이벤트 등록
+
+
+###### 1.AdminController
+
+
+	@PostMapping("/event/eventUpload")
 	public String eventUpload(BoardEventVO vo, RedirectAttributes rttr) {
 		eService.register(vo);
 		return "redirect:/admin/event/event";
 	}
-2.EventService
-@Override
+
+
+
+
+###### 2.EventService
+
+
+	@Override
 	public void register(BoardEventVO vo) {
 		mapper.register(vo);
 		if(vo.getAttachImage() == null) {
@@ -2865,6 +3623,8 @@ public void dogAdoptAdoptAdmit(int dogno,int bno, Model model) {
 		}
 		imgMapper.insertEvent(vo.getAttachImage());
 	}
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. Mapper의 register 매서드를 호출하여 쿼리를 수행하여 DB에 이벤트의 정보를 저장함 
 2. 이벤트 등록 페이지에서 추가한 이미지가 없다면 동작을 멈춤
@@ -2873,19 +3633,30 @@ public void dogAdoptAdoptAdmit(int dogno,int bno, Model model) {
 
 
 
-3.EventMapper
-<insert id="register">
+
+##### 3.EventMapper
+
+
+	<insert id="register">
 		insert into board_ev(bno, userid, title, sub, content, enddate)
 		values(board_ev_seq.nextval, #{userid}, #{title}, #{sub}, #{content} ,#{endDate})
 	</insert>
-4.ImageMapper
-<insert id="insertEvent">
+
+
+
+
+###### 4.ImageMapper
+
+
+	<insert id="insertEvent">
 		<selectKey keyProperty="bno" order="BEFORE" resultType="int">
 			select count(*) as bno from board_ev
 		</selectKey>
 		insert into board_ev_img(uuid,imagepath,filename,bno) 
 		values(#{uuid},#{imagePath},#{fileName},#{bno})
 	</insert>
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. 이미지가 없다면 위의 쿼리만 수행
 2. 이미지가 있다면 두 쿼리 모두 수행
@@ -2896,9 +3667,14 @@ public void dogAdoptAdoptAdmit(int dogno,int bno, Model model) {
 
 
 
-8.4 이벤트 수정
-1.EventController
-@PreAuthorize("principal.username == #vo.userid")
+
+##### 8.4 이벤트 수정
+
+
+###### 1.EventController
+
+
+	@PreAuthorize("principal.username == #vo.userid")
 	@PostMapping("/modify")
 	public String update(BoardEventVO vo,Criteria cri,RedirectAttributes rttr) {
 		if(service.update(vo)) {
@@ -2906,22 +3682,46 @@ public void dogAdoptAdoptAdmit(int dogno,int bno, Model model) {
 		}
 		return "redirect:/event/event"+cri.getListLink();
 	}
-2.EventService
-@Override
+
+
+
+
+###### 2.EventService
+
+
+	@Override
 	public boolean update(BoardEventVO vo) {
 		return mapper.update(vo) == 1;
-3.EventMapper
-<update id="update">
-update board_ev set title=#{title},content=#{content},enddate=#{endDate} where bno = #{bno}
-</update>
+	}
+
+
+
+
+###### 3.EventMapper
+
+
+	<update id="update">
+	update board_ev set title=#{title},content=#{content},enddate=#{endDate} where bno = #{bno}
+	</update>
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. 이벤트 수정 페이지에서 수정한 정보들을 Controller 와 Service를 거쳐 Mapper의 전달해 쿼리를 수행하고 update된 수를 반환 ( 고유 번호(bno)가 있기 때문에 1과0만 반환)
 2. 수행이 되었다면 Service에서 boolean타입으로 반환받아 Controller의 조건문을 거침
 3. true라면 수정이 완료되었다는 alert창을 출력하고 이벤트 목록 페이지로 redirect 시킴
 4. false라면 alert창을 출력하지 않고 이벤트 목록 페이지로 redirect 시킴
-8.5 이벤트 삭제
-1.EventController
-@PreAuthorize("principal.username == #vo.userid")
+--------------------------------------------------------------------------------------------------------------
+
+
+
+
+##### 8.5 이벤트 삭제
+
+
+###### 1.EventController
+
+
+	@PreAuthorize("principal.username == #vo.userid")
 	@PostMapping("/remove")
 	public String eventRemove(BoardEventVO vo,Criteria cri,RedirectAttributes rttr) {
 		if(service.delete(vo.getBno())){
@@ -2929,12 +3729,20 @@ update board_ev set title=#{title},content=#{content},enddate=#{endDate} where b
 		}
 		return "redirect:/event/event"+cri.getListLink();
 	}
-2.EventService
-@Override
+
+
+
+
+###### 2.EventService
+
+
+	@Override
 	public boolean delete(int bno) {
 		imgMapper.removeEvent(bno);
 		return mapper.delete(bno) == 1;
 	}
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. imgMapper의 removeEvent를 호출하여 등록한 이미지의 정보를 삭제
 2. 이벤트의 정보를 삭제하는 delete를 호출
@@ -2943,45 +3751,61 @@ update board_ev set title=#{title},content=#{content},enddate=#{endDate} where b
 --------------------------------------------------------------------------------------------------------------
 
 
-3.ImageMapper
+
+
+###### 3.ImageMapper
+
 	<delete id="removeEvent">
 		delete from board_ev_img
 		where bno = #{bno}
 	</delete>
-4.EventMapper
-<delete id="delete">
+
+
+
+
+###### 4.EventMapper
+
+
+	<delete id="delete">
 		delete from board_ev where bno = #{bno}
 	</delete>
 --------------------------------------------------------------------------------------------------------------
-1. 두 쿼리문 모두 수행하며 페이지에서 받아온 bno에 해당하는 정보만 삭제
---------------------------------------------------------------------------------------------------------------
+두 쿼리문 모두 수행하며 페이지에서 받아온 bno에 해당하는 정보만 삭제
 
 
 
 
+##### 8.6 FAQ 목록
 
 
+###### 1.AdminController
 
 
-
-
-
-
-8.6 FAQ 목록
-1.AdminController
-@GetMapping("/faq/faq")
+	@GetMapping("/faq/faq")
 	public void faq(Criteria cri, Model model) {
 		cri.setAmount(10);
 		model.addAttribute("faq", fService.faqList(cri));
 		model.addAttribute("pageMaker", new PageDTO(cri, fService.faqCount(cri)));
 	}
-2.FaqService
-@Override
+
+
+
+
+###### 2.FaqService
+
+
+	@Override
 	public List<BoardFaqVO> faqList(Criteria cri) {
 		return mapper.faqList(cri);
 	}
-3.FaqMapper
-<select id="faqList" resultType="kr.icia.domain.BoardFaqVO">
+
+
+
+
+###### 3.FaqMapper
+
+
+	<select id="faqList" resultType="kr.icia.domain.BoardFaqVO">
 	Select bno,title,content
 	from (select rownum rn,bno,title,content
 		from board_faq where
@@ -2990,89 +3814,174 @@ update board_ev set title=#{title},content=#{content},enddate=#{endDate} where b
 			rownum <= #{pageNum} * #{amount})
 	 		where (rn > (#{pageNum}-1) * #{amount}) 
 	 		order by bno desc
-8.7 FAQ 상세 페이지
-1.AdminController
-@GetMapping("/faq/faqInfo")
+	</select>
+
+
+
+
+##### 8.7 FAQ 상세 페이지
+
+
+###### 1.AdminController
+
+
+	@GetMapping("/faq/faqInfo")
 	public void getInfo(int bno, @ModelAttribute("cri") Criteria cri, Model model) {
 		model.addAttribute("faq", fService.getFaq(bno));
 	}
-2.FaqService
-@Override
+
+
+
+
+###### 2.FaqService
+
+
+	@Override
 	public BoardFaqVO getFaq(int bno) {
 		return mapper.getFaq(bno);
 	}
-3.FaqMapper
-<select id="getFaq" resultType="kr.icia.domain.BoardFaqVO">
+
+
+
+
+###### 3.FaqMapper
+
+
+	<select id="getFaq" resultType="kr.icia.domain.BoardFaqVO">
 		select bno,title,content
 		from board_faq
 		where bno =#{bno}
 	</select>
+	
+	
 --------------------------------------------------------------------------------------------------------------
-1. FAQ 목록 페이지에서 받은 게시물 번호(bno)를 가져와 일치하는 글의 제목(title)과 내용(content)를 가져와 화면에 출력해줌
---------------------------------------------------------------------------------------------------------------
+FAQ 목록 페이지에서 받은 게시물 번호(bno)를 가져와 일치하는 글의 제목(title)과 내용(content)를 가져와 화면에 출력해줌
 
 
-8.8 FAQ 등록
-1.AdminController
-@PostMapping("/faq/insertFaq")
+
+
+##### 8.8 FAQ 등록
+
+
+###### 1.AdminController
+
+	@PostMapping("/faq/insertFaq")
 	   public String faq(BoardFaqVO vo, RedirectAttributes rttr) {
 	      fService.register(vo);
 	      rttr.addFlashAttribute("result","글 추가가 완료되었습니다.");
 	      return "redirect:/admin/faq/faq";
-	  }
-2.FaqService
-@Override
+	}
+
+
+
+
+###### 2.FaqService
+
+
+	@Override
 	public void register(BoardFaqVO vo) {
 		mapper.register(vo);
 	}
-3.FaqMapper
-<insert id="register">
+
+
+
+
+###### 3.FaqMapper
+
+	<insert id="register">
 		insert into board_faq(bno, title, content)
 		values(board_faq_seq.nextval, #{title}, #{content})
 	</insert>
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. FAQ 등록 페이지에서 입력한 정보들을 Controller와 Service를 거쳐 Mapper를 통해 DB에 저장
 2. DB에 저장후 글이 추가되었다는 alert창을 출력해주며 FAQ 목록 페이지로 redirec 시킴
 --------------------------------------------------------------------------------------------------------------
 
-8.9 FAQ 삭제
-1.AdminController
-@PostMapping("/faq/remove")
+
+
+
+##### 8.9 FAQ 삭제
+
+
+###### 1.AdminController
+
+
+	@PostMapping("/faq/remove")
 	public String remove(BoardFaqVO vo,RedirectAttributes rttr) {
 		if(fService.delete(vo.getBno())){
 			rttr.addFlashAttribute("result","게시물 삭제가 완료되었습니다.");
 		}
 		return "redirect:/admin/faq/faq";
-2.FaqService
-@Override
+	}
+
+
+
+
+###### 2.FaqService
+
+
+	@Override
 	public boolean delete(int bno) {
 		return mapper.delete(bno) == 1;
 	}
-3.FaqMapper
-<delete id="delete">
+
+
+
+
+###### 3.FaqMapper
+
+
+	<delete id="delete">
 		delete from board_faq where bno = #{bno}
 	</delete>
+
+
 --------------------------------------------------------------------------------------------------------------
 1. FAQ 상세 페이지에서 삭제버튼을 누르면 confirm창을 출력해 삭제 여부를 다시 한번 입력받도록 하고 다시 한번 삭제를 하면 해당 게시물 번호를 post 형식으로 Controller로 보냄
 2. Controller에서 Service를 거쳐 Mapper에 게시물 번호(bno)값을 넘겨 게시물 번호와 일치하는 정보를 삭제
 3. 정상적으로 삭제가 되었다면 Service에서 true를 반환하여 삭제가 완료되었다는 alert창을 출력
 4. FAQ 목록으로 redirect 시킴
-9. 쿠폰관리
+--------------------------------------------------------------------------------------------------------------
 
-9.1 쿠폰 등록
-1.AdminController
-@PostMapping("/coupon/registerCoupon")
+
+
+
+#### 9. 쿠폰관리
+
+
+
+
+##### 9.1 쿠폰 등록
+
+
+###### 1.AdminController
+
+
+	@PostMapping("/coupon/registerCoupon")
 	public String couponRegister(CouponVO vo,RedirectAttributes rttr) {
 		cService.insertCoupon(vo);
 		return "redirect:/admin/coupon/coupon";
 	}
-2.CouponService
-@Override
+
+
+
+
+###### 2.CouponService
+
+	@Override
 	public void insertCoupon(CouponVO vo) {
 		mapper.insertCoupon(vo);
 	}
-3.CouponMapper
-<insert id="insertCoupon">
+
+
+
+
+###### 3.CouponMapper
+
+
+	<insert id="insertCoupon">
 		insert into coupon(cpnum,cpname,cpcontent,value,type) 
 		values(coupon_seq.nextval,#{cpName},#{cpContent},#{value},#{type})
 	</insert>
@@ -3080,15 +3989,25 @@ update board_ev set title=#{title},content=#{content},enddate=#{endDate} where b
 
 
 
-9.2 등급별 쿠폰 발급
-1.AdminController
-@PostMapping("/coupon/registerGrade")
+##### 9.2 등급별 쿠폰 발급
+
+
+###### 1.AdminController
+
+
+	@PostMapping("/coupon/registerGrade")
 	public String couponRegisterGrade(CouponVO vo,RedirectAttributes rttr) {
 		cService.inserGradeCoupon(vo);
 		return "redirect:/admin/coupon/list";
 	}
-2.CouponService
-@Override
+
+
+
+
+###### 2.CouponService
+
+
+	@Override
 	public void inserGradeCoupon(CouponVO vo) {
 		List<String> userid = mMapper.getGradeId((vo.getGrade().getTear()));
 		userid.forEach(id->{
@@ -3096,6 +4015,8 @@ update board_ev set title=#{title},content=#{content},enddate=#{endDate} where b
 			mapper.insertGradeCoupon(vo);
 		});
 	}
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. vo에서 입력받은 등급을 가져와 Mapper의 getGradeId로 넘겨주며 호출함
 2. Mapper에서 반환 받은 값을 List형식의 userid로 할당
@@ -3104,41 +4025,57 @@ update board_ev set title=#{title},content=#{content},enddate=#{endDate} where b
 
 
 
-3.MemberMapper
-<select id="getGradeId" resultType="String">
+
+###### 3.MemberMapper
+
+	<select id="getGradeId" resultType="String">
 	 	select 
-m.userid from member m,grade g where m.grade = g.grade and tear = #{tear}
+	m.userid from member m,grade g where m.grade = g.grade and tear = #{tear}
 	 </select>
+	 
+	 
 --------------------------------------------------------------------------------------------------------------
-1. 페이지에서 입력한 등급의 회원 아이디를 반환
---------------------------------------------------------------------------------------------------------------
-4.CouponMapper
-<insert id="insertGradeCoupon">
+페이지에서 입력한 등급의 회원 아이디를 반환
+
+
+
+
+###### 4.CouponMapper
+	<insert id="insertGradeCoupon">
 		insert into coupon_member(userid,cpnum,cpenddate) 
 		values(#{userid},#{cpnum},#{cpEndDate})
 	</insert>
+	
+	
 --------------------------------------------------------------------------------------------------------------
-1. MemberMapper에서 넘겨 받은 회원 아이디에게 쿠폰을 부여(forEach 반복)
---------------------------------------------------------------------------------------------------------------
+MemberMapper에서 넘겨 받은 회원 아이디에게 쿠폰을 부여(forEach 반복)
 
 
 
 
+##### 9.3 지정 회원 쿠폰 발급
 
 
-9.3 지정 회원 쿠폰 발급
-1.AdminController
-@PostMapping("/coupon/registerUser")
+###### 1.AdminController
+
+	@PostMapping("/coupon/registerUser")
 	public String couponRegisterUser(CouponVO vo,RedirectAttributes rttr) {
 		cService.insertUser(vo);
 		return "redirect:/admin/coupon/list?type=I&keyword="+vo.getUserid();
 	}
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. 페이지에서 입력받은 정보를 vo에 담아 insertUser에 넘기며 호출
 2. insertUser 호출 후 쿠폰 발급 리스트로 이동하는데 회원의 아이디를 검색하여 해당 회원의 쿠폰 목록만을 보여주는 페이지를 출력
 --------------------------------------------------------------------------------------------------------------
-2.CouponService
-@Override
+
+
+
+
+###### 2.CouponService
+
+	@Override
 	public void insertUser(CouponVO vo) {
 		if(mMapper.userIdCheck(vo.getUserid()) == 1)
 			mapper.insertGradeCoupon(vo);
