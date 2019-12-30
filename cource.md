@@ -587,31 +587,41 @@ Provider에서 가져온 userId를 Mapper의 파라메터 값으로 넘기고 �
 ###### 6.CustomAuthenticationProvider
 
 
-String enabled = user.getEnabled();
+	String enabled = user.getEnabled();
 
-if(enabled.equals("0")) {
-			throw new DisabledException(enabled);
-		}else if(enabled.equals("2")) {
-			throw new LockedException(enabled);
+	if(enabled.equals("0")) {
+				throw new DisabledException(enabled);
+			}else if(enabled.equals("2")) {
+				throw new LockedException(enabled);
+			}
+	return new UsernamePasswordAuthenticationToken(userid, userpw, user.getAuthorities());
 		}
-return new UsernamePasswordAuthenticationToken(userid, userpw, user.getAuthorities());
-	}
+
+
 --------------------------------------------------------------------------------------------------------------
 1. vo의 Enabled를 비교하여 0이라면 계정이 이메일 인증을 거치지 않은 상태이므로 로그인이 되지않고,2인 상태라면 정지처분을 받은 계정이므로 로그인이 되지않는 예외 처리를 함
 2. 아이디,비밀번호,계정 활성화 상태를 파라메터로 UsernamePasswordAuthenticationToken를 호출 하고 그 값을 리턴 처리 해줌(userId는 principal,userpw는 credentials로 저장)
 --------------------------------------------------------------------------------------------------------------
-7.LoginFailureHandler
-if(exception instanceof BadCredentialsException) {
-			errorMsg = MessageUtils.getMessage("error.BadCredentials");
-		} else if(exception instanceof InternalAuthenticationServiceException) {
-			errorMsg = MessageUtils.getMessage("error.BadCredentials");
-		} else if(exception instanceof DisabledException) {
-			errorMsg = MessageUtils.getMessage("error.Disaled");
-		} else if(exception instanceof CredentialsExpiredException) {
-			errorMsg = MessageUtils.getMessage("error.CredentialsExpired");
-		} else if(exception instanceof LockedException) {
-			errorMsg = MessageUtils.getMessage("error.Locked");
-		}
+
+
+
+
+###### 7.LoginFailureHandler
+
+
+	if(exception instanceof BadCredentialsException) {
+				errorMsg = MessageUtils.getMessage("error.BadCredentials");
+			} else if(exception instanceof InternalAuthenticationServiceException) {
+				errorMsg = MessageUtils.getMessage("error.BadCredentials");
+			} else if(exception instanceof DisabledException) {
+				errorMsg = MessageUtils.getMessage("error.Disaled");
+			} else if(exception instanceof CredentialsExpiredException) {
+				errorMsg = MessageUtils.getMessage("error.CredentialsExpired");
+			} else if(exception instanceof LockedException) {
+				errorMsg = MessageUtils.getMessage("error.Locked");
+			}
+
+
 --------------------------------------------------------------------------------------------------------------
 1. security-context에서 LoginFailureHandler에서 예외 처리를 하도록 설정함
 2. 위에서부터 비밀번호가 틀릴 경우, 존재 하지 않는 아이디일 경우,계정이 비활성화인 상태인 경우, 비밀번호 유효 기간이 만료된 경우,잠긴 계정일 경우 예외 처리를 함
@@ -620,101 +630,147 @@ if(exception instanceof BadCredentialsException) {
 
 
 
+##### 1.3 회원정보 수정
 
 
+###### 1.MyPageController
 
 
-
-
-
-
-
-
-
-
-
-
-1.3 회원정보 수정
-1.MyPageController
-@PreAuthorize("isAuthenticated()")
-@GetMapping("/getInfo")
-	public String getMyPage(Principal prin,RedirectAttributes rttr) {
-		String userid = prin.getName();
-		rttr.addFlashAttribute("member",service.getUser(userid));
+	@PreAuthorize("isAuthenticated()")
+	@GetMapping("/getInfo")
+		public String getMyPage(Principal prin,RedirectAttributes rttr) {
+			String userid = prin.getName();
+			rttr.addFlashAttribute("member",service.getUser(userid));
+			
+			
 --------------------------------------------------------------------------------------------------------------
 1. 회원의 정보를 prin의 변수에 담아 파라메터로 넘겨받음(웹페이지로 부터)
 2. 넘겨받은 정보중 회원의 아이디를 userId에 저장
 3. service의 getUser매서드에 파라메터를 userId로 주고 호출함 결과를 member 라는 이름의 속성에 저장
 --------------------------------------------------------------------------------------------------------------
-2.MemberServiceImpl
-@Override
-	public MemberVO getUser(String userid) {
-		return mapper.read(userid);
-	}
+
+
+
+
+###### 2.MemberServiceImpl
+
+
+	@Override
+		public MemberVO getUser(String userid) {
+			return mapper.read(userid);
+		}
+		
+		
 --------------------------------------------------------------------------------------------------------------
 1. cotroller에서 넘겨받은 회원 아이디를 mapper의 read 매서드의 파라메터로 넘겨줌
 2. 그리고 그 결과를 리턴
 --------------------------------------------------------------------------------------------------------------
 
 
-3.MemberMapper
-<select id="read" resultMap="memberMap">
-		select 
-	mem.userno,mem.userid,userpw,username,addr_1,addr_2,addr_3,email,phone,to_char(birth,'yyyyMMdd') as birth,joindate,updatedate,report,grade,adopt,enabled,auth,uuid,imagepath,filename 
-		from 
-		member mem,member_auth auth,member_img img
-        where auth.userid(+) = mem.userid
-        and img.userno(+) = mem.userno
-        and mem.userid = #{userid}
-	</select>
+
+
+###### 3.MemberMapper
+
+
+	<select id="read" resultMap="memberMap">
+			select 
+		mem.userno,mem.userid,userpw,username,addr_1,addr_2,addr_3,email,phone,to_char(birth,'yyyyMMdd') as birth,joindate,updatedate,report,grade,adopt,enabled,auth,uuid,imagepath,filename 
+			from 
+			member mem,member_auth auth,member_img img
+		where auth.userid(+) = mem.userid
+		and img.userno(+) = mem.userno
+		and mem.userid = #{userid}
+		</select>
+		
+		
 --------------------------------------------------------------------------------------------------------------
 1. 회원 가입 절차에서도 썼던 쿼리로 Service로 부터 받아온 userid 를 DB 에서 일치하는 회원의 정보들을 가져오는데, member_img에 저장한 회원의 프로필 사진이 있다면 출력을 같이 하고 없으면 null 값을 출력하기위해 outer join을 사용하였음
 2. 그리고 그 결과를 memberVO 에 할당
 --------------------------------------------------------------------------------------------------------------
-4.MyPageController
-public String getMyPage(Principal prin,RedirectAttributes rttr) {
-rttr.addFlashAttribute("member",service.getUser(userid));
-		
-		return "redirect:/mypage/info";
-}
+
+
+
+
+###### 4.MyPageController
+
+
+	public String getMyPage(Principal prin,RedirectAttributes rttr) {
+	rttr.addFlashAttribute("member",service.getUser(userid));
+
+			return "redirect:/mypage/info";
+	}
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. mapper와 service에서부터 받아온 값을 member라는 속성값에 저장하고 info페이지(회원정보)로 redirect 시킴
-1.4 ID찾기
-1.MemberController
-public String findUserId(@Param("userName") String userName,
-			@Param("email") String email,
-			RedirectAttributes rttr) {
-rttr.addFlashAttribute("id",memService.userGetId(userName, email));
-}
+
+
+
+
+##### 1.4 ID찾기
+
+
+###### 1.MemberController
+
+
+	public String findUserId(@Param("userName") String userName,
+				@Param("email") String email,
+				RedirectAttributes rttr) {
+	rttr.addFlashAttribute("id",memService.userGetId(userName, email));
+	}
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. ID 찾기 페이지에서 받은 회원의 이름과 이메일을 Service의 파라메터로 넘겨 주고 호출함
 --------------------------------------------------------------------------------------------------------------
-2.MemberService
-public List<String> userGetId(String userName,String email) {
-		return mapper.userGetId(userName, email);
-	}
+
+
+
+
+###### 2.MemberService
+
+
+	public List<String> userGetId(String userName,String email) {
+			return mapper.userGetId(userName, email);
+		}
+		
+		
 --------------------------------------------------------------------------------------------------------------
 1. mapper의 userGetId를 controller에서 넘겨받은 userName과 email을 다시 넘겨 주며 호출 함
 --------------------------------------------------------------------------------------------------------------
-3.MemberMapper
-<select id="userGetId" resultType="String">
-	 	select userid from member 
-	 	where username = #{userName} and 
-	 	email = #{email}
-	 </select>
+
+
+
+
+###### 3.MemberMapper
+
+
+	<select id="userGetId" resultType="String">
+			select userid from member 
+			where username = #{userName} and 
+			email = #{email}
+		 </select>
 
 
 --------------------------------------------------------------------------------------------------------------
 1. Service에서 넘겨받은 email과 userName를 조회하여 동일한 회원의 Id를 String 타입으로 돌려받음
 --------------------------------------------------------------------------------------------------------------
-4.MemberController
-public String findUserId(@Param("userName") String userName,
-			@Param("email") String email,
-			RedirectAttributes rttr) {
-rttr.addFlashAttribute("id",memService.userGetId(userName, email));
 
-		return "redirect:/member/checkid";
-}
+
+
+
+###### 4.MemberController
+
+
+	public String findUserId(@Param("userName") String userName,
+				@Param("email") String email,
+				RedirectAttributes rttr) {
+	rttr.addFlashAttribute("id",memService.userGetId(userName, email));
+
+			return "redirect:/member/checkid";
+	}
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. Mapper에서 받은 Id를 속성 이름이 id 인 속성 값으로 넣어 주고 checkid 로 redirect 시키고
 2. 해당 페이지에서 입력한 정보(이메일, 유저이름)와 일치하는 회원의 아이디를 출력해줌
@@ -723,24 +779,27 @@ rttr.addFlashAttribute("id",memService.userGetId(userName, email));
 
 
 
+##### 1.5 비밀번호 찾기(변경)
 
 
+###### 1.MemberController
 
-1.5 비밀번호 찾기(변경)
-1.MemberController
-@GetMapping("/member/changeUserPw")
-	public String changePw(@Param("userid") String userid,
-			@Param("userName") String userName,
-			@Param("email") String email,
-			RedirectAttributes rttr) throws Exception {
-		if(memService.changeUserPw(userid, userName, email)) {
-			 rttr.addFlashAttribute("result","이메일로 변경된 비밀번호가 전송됩니다.");
-		 }else {
-			 rttr.addFlashAttribute("result","정보가 올바르지 않습니다.");
-			 return "redirect:/member/findpw";
-		 }
-return "redirect:/userlogin";
-}
+
+	@GetMapping("/member/changeUserPw")
+		public String changePw(@Param("userid") String userid,
+				@Param("userName") String userName,
+				@Param("email") String email,
+				RedirectAttributes rttr) throws Exception {
+			if(memService.changeUserPw(userid, userName, email)) {
+				 rttr.addFlashAttribute("result","이메일로 변경된 비밀번호가 전송됩니다.");
+			 }else {
+				 rttr.addFlashAttribute("result","정보가 올바르지 않습니다.");
+				 return "redirect:/member/findpw";
+			 }
+	return "redirect:/userlogin";
+	}
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. 비밀번호 찾기 페이지에서 입력한 userid, userName,email을 Service로 넘겨 결과를 받아옴
 2. 결과가 true 로 일치한다면 로그인 페이지로 redirect시키며 이메일로 변경된 비밀번호가 전송되었다는 alert 창을 출력함
@@ -748,22 +807,28 @@ return "redirect:/userlogin";
 --------------------------------------------------------------------------------------------------------------
 
 
-2.MemberService
-public boolean changeUserPw(String userid, String userName, String email) throws Exception {
-		String userpw = new TempKey().getKey(8, false);
-		MailHandler sendMail = new MailHandler(mailSender);
-		sendMail.setSubject("비밀번호 변경 안내"); // 메일제목
-		sendMail.setText( // 메일내용
-				new StringBuffer().append("<h1>변경된 비밀번호</h1>")
-				.append(userpw)
-				.toString());
-		sendMail.setFrom("thunkim96@gmail.com","관리자"); // 보낸이
-		sendMail.setTo(email); // 받는이
-		sendMail.send();
-		userpw = pwencoder.encode(userpw);
+
+
+###### 2.MemberService
+
+
+	public boolean changeUserPw(String userid, String userName, String email) throws Exception {
+			String userpw = new TempKey().getKey(8, false);
+			MailHandler sendMail = new MailHandler(mailSender);
+			sendMail.setSubject("비밀번호 변경 안내"); // 메일제목
+			sendMail.setText( // 메일내용
+					new StringBuffer().append("<h1>변경된 비밀번호</h1>")
+					.append(userpw)
+					.toString());
+			sendMail.setFrom("thunkim96@gmail.com","관리자"); // 보낸이
+			sendMail.setTo(email); // 받는이
+			sendMail.send();
+			userpw = pwencoder.encode(userpw);
+
+			return mapper.changePw(userid, userName, email, userpw) == 1;
+		}
 		
-		return mapper.changePw(userid, userName, email, userpw) == 1;
-	}
+		
 --------------------------------------------------------------------------------------------------------------
 1. TempKey를 통해 임의의 값 8자리를 가져와서 userpw라는 변수에 할당
 2. MailHandler(회원가입 부분에 서술한 커스텀한 MailHandler)를 통해 메일 기능을 사용하기 위해 sendMail에 할당해줌(레퍼런스)
@@ -771,20 +836,31 @@ public boolean changeUserPw(String userid, String userName, String email) throws
 --------------------------------------------------------------------------------------------------------------
 
 
-3.MemberMapper
-<update id="changePw">
-	 	update member set userpw = #{userpw} 
-	 	where userid = #{userid} and 
-	 	userName = #{userName} and 
-	 	email = #{email}
-	 </update>
+
+
+###### 3.MemberMapper
+
+
+	<update id="changePw">
+			update member set userpw = #{userpw} 
+			where userid = #{userid} and 
+			userName = #{userName} and 
+			email = #{email}
+		 </update>
+		 
+		 
 --------------------------------------------------------------------------------------------------------------
 1. 받아온 아이디,이름,이메일이 일치하는 회원의 비밀번호를 암호화된 새로운 비밀번호로 수정을 해줌
 2. 수정이 되었다면 1, 되지 않았다면 0을 리턴해줌
 --------------------------------------------------------------------------------------------------------------
-4.MemberService
 
-return mapper.changePw(userid, userName, email, userpw) == 1;
+
+
+
+###### 4.MemberService
+
+
+	return mapper.changePw(userid, userName, email, userpw) == 1;
 
 --------------------------------------------------------------------------------------------------------------
 1. Mapper에서 나온 결과 값이 1이라면 true로 리턴 0이라면 false로 리턴
@@ -793,78 +869,100 @@ return mapper.changePw(userid, userName, email, userpw) == 1;
 
 
 
+###### 5.MemberController
 
 
-5.MemberController
-if(memService.changeUserPw(userid, userName, email)) {
-			 rttr.addFlashAttribute("result","이메일로 변경된 비밀번호가 전송됩니다.");
-		 }else {
-			 rttr.addFlashAttribute("result","정보가 올바르지 않습니다.");
-			 return "redirect:/member/findpw";
-		 }
-		return "redirect:/userlogin";
+	if(memService.changeUserPw(userid, userName, email)) {
+				 rttr.addFlashAttribute("result","이메일로 변경된 비밀번호가 전송됩니다.");
+			 }else {
+				 rttr.addFlashAttribute("result","정보가 올바르지 않습니다.");
+				 return "redirect:/member/findpw";
+			 }
+			return "redirect:/userlogin";
+			
+			
 --------------------------------------------------------------------------------------------------------------
-1. Service에서 가져온 값을 비교하여 조건문 수행
---------------------------------------------------------------------------------------------------------------
+Service에서 가져온 값을 비교하여 조건문 수행
 
+
+
+
+![4](https://user-images.githubusercontent.com/55867290/71567807-21325900-2b05-11ea-8a14-9ba01f48dce4.png)
 ------------------------------------------------------------------------------------------------------------
-1. 회원의 아이디,이름,이메일까지 일치할 경우 입력한 이메일로 임의의 8자리 문자/숫자를 보냄
-------------------------------------------------------------------------------------------------------------
+회원의 아이디,이름,이메일까지 일치할 경우 입력한 이메일로 임의의 8자리 문자/숫자를 보냄
 
+
+
+
+
+![5](https://user-images.githubusercontent.com/55867290/71567810-27283a00-2b05-11ea-8f8c-ce3184b73a94.png)
 --------------------------------------------------------------------------------------------------------------
-1. 이메일로 온 비밀번호를 입력하여 로그인이 가능함
---------------------------------------------------------------------------------------------------------------
+이메일로 온 비밀번호를 입력하여 로그인이 가능함
 
 
 
 
 
+##### 1.6 쿠폰조회
 
 
+###### 1.MyPageController
 
 
+	public void coupon(Criteria cri,Model model,Principal prin) {
 
-
-
-
-
-1.6 쿠폰조회
-1.MyPageController
-public void coupon(Criteria cri,Model model,Principal prin) {
+			String userid = prin.getName();
+			cri.setType("I");
+			cri.setKeyword(userid);
+			model.addAttribute("coupon",Cservice.haveUserCoupon(userid));
+		}
 		
-		String userid = prin.getName();
-		cri.setType("I");
-		cri.setKeyword(userid);
-		model.addAttribute("coupon",Cservice.haveUserCoupon(userid));
-	}
+		
 --------------------------------------------------------------------------------------------------------------
 1. userid 에 현재 로그인 정보를 담고있는 principal을 파라메터로 받아 getName를 통해 회원 아이디를 가져와 할당함
 2. 검색을 위해 Criteria의 setType으로 I를 담고setKeyword로 userid를 담음
 3. 회원의 아이디를 파라메터로 담은 service의 haveUserCoupon 매서드 호출
 --------------------------------------------------------------------------------------------------------------
-2.CouponService
-@Override
-	public List<CouponVO> haveUserCoupon(String userid) {
-		log.info("haveUserCoupon");
-		return mapper.haveUserCoupon(userid);
-	}
+
+
+
+
+###### 2.CouponService
+
+
+	@Override
+		public List<CouponVO> haveUserCoupon(String userid) {
+			log.info("haveUserCoupon");
+			return mapper.haveUserCoupon(userid);
+		}
+		
+		
 --------------------------------------------------------------------------------------------------------------
-1. controller에서 받아온 cri 를 파라메터로 Mapper의 haveCounpon을 호출
---------------------------------------------------------------------------------------------------------------3.CouponMapper
-<select id="haveUserCoupon" resultType="kr.icia.domain.CouponVO">
-		<![CDATA[
-			select 
-			m.cpnum,cpname,cpcontent,value,type,cpupdate,cpenddate,userid 
-			from 
-			coupon c,coupon_member m 
-			where 
-c.cpnum = m.cpnum 
-and 
-			cpenddate > sysdate 
-			and
-			userid = #{userid}
-		]]>
-	</select>
+controller에서 받아온 cri 를 파라메터로 Mapper의 haveCounpon을 호출
+
+
+
+
+
+###### 3.CouponMapper
+
+
+	<select id="haveUserCoupon" resultType="kr.icia.domain.CouponVO">
+			<![CDATA[
+				select 
+				m.cpnum,cpname,cpcontent,value,type,cpupdate,cpenddate,userid 
+				from 
+				coupon c,coupon_member m 
+				where 
+	c.cpnum = m.cpnum 
+	and 
+				cpenddate > sysdate 
+				and
+				userid = #{userid}
+			]]>
+		</select>
+		
+		
 --------------------------------------------------------------------------------------------------------------
 1. 넘겨받은 회원 아이디를 비교하여 쿠폰을 가져오는데 쿠폰 만료일(cpenddate)을 지난 쿠폰은 가져올수 없고 회원이 가지고 있지않은 쿠폰이라면 출력하지 않음
 2. 결과를 CouponVO 에 반환하여 쿠폰 조회 페이지에 출력해줌
@@ -872,29 +970,31 @@ and
 
 
 
-1.7 회원 탈퇴
-1.MyPageController - 회원 탈퇴 시작과 끝
-private BCryptPasswordEncoder pwencoder;
-public String memberoutPost(HttpSession session,Principal prin,
-	@Param("userpw") String userpw,
-	RedirectAttributes rttr) {
-String userid = prin.getName();
-		CustomUser user = (CustomUser) UserService.loadUserByUsername(userid);
-if(pwencoder.matches(userpw, user.getPassword())) {
-			Cservice.deleteUser(userid);
-			Sservice.deleteUser(userid);
-			Gservice.deleteUser(userid);
-			Mservice.deleteUserAuth(userid);
-			service.deleteUser(userid);
-}
-SecurityContextHolder.clearContext();
-If(session != null)
-session.invalidate();
-rttr.addFlashAttribute("result","회원탈퇴가 완료되었습니다. 이용해주셔서 감사합니다.");
-return "redirect:/";
+
+##### 1.7 회원 탈퇴
 
 
+###### 1.MyPageController - 회원 탈퇴 시작과 끝
 
+
+	private BCryptPasswordEncoder pwencoder;
+	public String memberoutPost(HttpSession session,Principal prin,
+		@Param("userpw") String userpw,
+		RedirectAttributes rttr) {
+	String userid = prin.getName();
+			CustomUser user = (CustomUser) UserService.loadUserByUsername(userid);
+	if(pwencoder.matches(userpw, user.getPassword())) {
+				Cservice.deleteUser(userid);
+				Sservice.deleteUser(userid);
+				Gservice.deleteUser(userid);
+				Mservice.deleteUserAuth(userid);
+				service.deleteUser(userid);
+	}
+	SecurityContextHolder.clearContext();
+	If(session != null)
+	session.invalidate();
+	rttr.addFlashAttribute("result","회원탈퇴가 완료되었습니다. 이용해주셔서 감사합니다.");
+	return "redirect:/";
 
 
 --------------------------------------------------------------------------------------------------------------
@@ -906,34 +1006,52 @@ return "redirect:/";
 6. 해당 작업까지 끝냈다면 회원 탈퇴가 완료되었다는 alert 창을 출력함
 7. 회원 탈퇴가 되었을 경우 메인 페이지로 redirect 시킴
 --------------------------------------------------------------------------------------------------------------
-else {
-			log.info("일치하지 않음");
-			rttr.addFlashAttribute("result","비밀번호가 일치하지 않습니다.");
-			return "redirect:/mypage/memberout";
-}
 
 
---------------------------------------------------------------------------------------------------------------
-1. 회원탈퇴 페이지에서 입력한 비밀번호가 회원의 비밀번호와 맞지 않을 경우 비밀번호가 틀렸다는 alert 창을 출력하고 다시 회원 탈퇴 페이지로 redirect 시킴
---------------------------------------------------------------------------------------------------------------
-
-
-2. 상품관리
-
-2.1 상품 목록
-1.SaleController - 상품 목록 시작	
-@GetMapping("/list")
-	public void getSaleList(Criteria cri,Model model){
-		model.addAttribute("menu",service.getCate());
-}
---------------------------------------------------------------------------------------------------------------
-1. service의 getCate를 호출
---------------------------------------------------------------------------------------------------------------
-2.SaleService - Mapper에 카테고리 정보 요청
-@Override
-	public List<CateVO> getCate() {
-		return mapper.getCate();
+	else {
+				log.info("일치하지 않음");
+				rttr.addFlashAttribute("result","비밀번호가 일치하지 않습니다.");
+				return "redirect:/mypage/memberout";
 	}
+
+
+--------------------------------------------------------------------------------------------------------------
+회원탈퇴 페이지에서 입력한 비밀번호가 회원의 비밀번호와 맞지 않을 경우 비밀번호가 틀렸다는 alert 창을 출력하고 다시 회원 탈퇴 페이지로 redirect 시킴
+
+
+
+#### 2. 상품관리
+
+
+
+
+##### 2.1 상품 목록
+
+
+###### 1.SaleController - 상품 목록 시작	
+
+
+	@GetMapping("/list")
+		public void getSaleList(Criteria cri,Model model){
+			model.addAttribute("menu",service.getCate());
+	}
+	
+	
+--------------------------------------------------------------------------------------------------------------
+service의 getCate를 호출
+
+
+
+
+###### 2.SaleService - Mapper에 카테고리 정보 요청
+
+
+	@Override
+		public List<CateVO> getCate() {
+			return mapper.getCate();
+		}
+		
+		
 --------------------------------------------------------------------------------------------------------------
 1. Mapper의 getCate를 호출
 --------------------------------------------------------------------------------------------------------------
@@ -941,116 +1059,174 @@ else {
 
 
 
-3.SaleMapper - DB에 카테고리 정보 요청
-<select id="getCate" resultType="kr.icia.domain.CateVO">
-		select * from sale_cate
-	</select>
+###### 3.SaleMapper - DB에 카테고리 정보 요청
+
+
+	<select id="getCate" resultType="kr.icia.domain.CateVO">
+			select * from sale_cate
+		</select>
+		
+		
 --------------------------------------------------------------------------------------------------------------
 1. DB에 있는 카테고리 정보를 가져와서 cateVO 에 반환
 --------------------------------------------------------------------------------------------------------------
-4.SalaController - 페이징 처리 및 상품 정보 요청
-public void getSaleList(Criteria cri,Model model){
-	model.addAttribute("list",service.getSale(cri));
-}
+
+
+
+
+###### 4.SalaController - 페이징 처리 및 상품 정보 요청
+
+
+	public void getSaleList(Criteria cri,Model model){
+		model.addAttribute("list",service.getSale(cri));
+	}
+
+
 --------------------------------------------------------------------------------------------------------------
 1. 카테고리 정보를 담은 cri 를 파라메터로 getSale 를 호출
 --------------------------------------------------------------------------------------------------------------
-5.SaleService - 상품 정보 
-public List<SaleVO> getSale(Criteria cri) {
-		if(cri.getCateno() == 0) {
-			return mapper.getSale(cri);
+
+
+
+
+###### 5.SaleService - 상품 정보 
+
+
+	public List<SaleVO> getSale(Criteria cri) {
+			if(cri.getCateno() == 0) {
+				return mapper.getSale(cri);
+			}
+			return mapper.getSaleList(cri);
 		}
-		return mapper.getSaleList(cri);
-	}
+		
+		
 --------------------------------------------------------------------------------------------------------------
 1. cri의 카테고리 번호가 0 일 경우 mapper의 getSale를 호출
 2. 아니라면 getSaleList(cri) 로 선택한 카테고리 번호의 상품들을 요청하기 위해 호출
-6.SaleMapper(Cateno=0)
-<select id="getSale" resultMap="saleMap">
-		<![CDATA[
-			select saleno,salename, cost,content,amount,good,updatedate,uuid,
-			cateno,imagepath,filename,catename 
-			from 
-			(select /*+index_desc(sale slaeno)*/
-			rownum rn, s.saleno,salename,s.cateno,
-			to_char(cost,'999,999')||'원' cost,	content,amount,
-			(select count(*) from sale_good where saleno = s.saleno) as good,
-			s.updatedate,uuid,imagepath,filename,c.catename
-			from sale s,sale_img i,sale_cate c
-			where 
-			s.cateno = c.cateno and  i.saleno = s.saleno and 
-		]]>
-		<include refid="criteria"/>
-		<![CDATA[
-			rownum <= #{pageNum} * #{amount})
-			where (rn > (#{pageNum}-1) * #{amount})
-		]]>
+--------------------------------------------------------------------------------------------------------------
+
+
+
+
+###### 6.SaleMapper(카테고리번호를 받지 않았다면,cateno==0)
+
+
+	<select id="getSale" resultMap="saleMap">
+			<![CDATA[
+				select saleno,salename, cost,content,amount,good,updatedate,uuid,
+				cateno,imagepath,filename,catename 
+				from 
+				(select /*+index_desc(sale slaeno)*/
+				rownum rn, s.saleno,salename,s.cateno,
+				to_char(cost,'999,999')||'원' cost,	content,amount,
+				(select count(*) from sale_good where saleno = s.saleno) as good,
+				s.updatedate,uuid,imagepath,filename,c.catename
+				from sale s,sale_img i,sale_cate c
+				where 
+				s.cateno = c.cateno and  i.saleno = s.saleno and 
+			]]>
+			<include refid="criteria"/>
+			<![CDATA[
+				rownum <= #{pageNum} * #{amount})
+				where (rn > (#{pageNum}-1) * #{amount})
+			]]>
+
+
 --------------------------------------------------------------------------------------------------------------
 1. 모든 상품의 정보를 담아 SaleVO 에 반환
 --------------------------------------------------------------------------------------------------------------
 
-7.SaleMapper(Cateno!=0)
-<![CDATA[
-			select saleno,salename, cost,content,amount,good,updatedate,uuid,
-			cateno,imagepath,filename,catename 
-			from 
-			(select /*+index_desc(sale slaeno)*/
-			rownum rn, s.saleno,salename,s.cateno,
-			to_char(cost,'999,999')||'원' cost,	content,amount,
-			(select count(*) from sale_good where saleno = s.saleno) as good,
-			s.updatedate,uuid,imagepath,filename,c.catename
-			from sale s,sale_img i,sale_cate c
-			where 
-			s.cateno = c.cateno and  i.saleno = s.saleno and 
-		]]>
-		<include refid="criteria"/>
-		<![CDATA[
-			rownum <= #{pageNum} * #{amount})
-			where (rn > (#{pageNum}-1) * #{amount})
-and cateno = #{cateno}
-		]]>
+
+
+
+###### 7.SaleMapper(카테고리 번호를 받았다면,cateno!=0)
+
+
+	<![CDATA[
+				select saleno,salename, cost,content,amount,good,updatedate,uuid,
+				cateno,imagepath,filename,catename 
+				from 
+				(select /*+index_desc(sale slaeno)*/
+				rownum rn, s.saleno,salename,s.cateno,
+				to_char(cost,'999,999')||'원' cost,	content,amount,
+				(select count(*) from sale_good where saleno = s.saleno) as good,
+				s.updatedate,uuid,imagepath,filename,c.catename
+				from sale s,sale_img i,sale_cate c
+				where 
+				s.cateno = c.cateno and  i.saleno = s.saleno and 
+			]]>
+			<include refid="criteria"/>
+			<![CDATA[
+				rownum <= #{pageNum} * #{amount})
+				where (rn > (#{pageNum}-1) * #{amount})
+	and cateno = #{cateno}
+			]]>
+			
+			
 --------------------------------------------------------------------------------------------------------------
-1. 위 코드와 거의 동일 하나 카테고리를 비교하는 조건문(볼드체)를 추가 하였음
---------------------------------------------------------------------------------------------------------------
+위 코드와 거의 동일 하나 카테고리를 비교하는 조건문(볼드체)를 추가 하였음
 
-8.SaleController
-public void getSaleList(Criteria cri,Model model){
 
-		cri.setAmount(12);
 
-model.addAttribute("pageMaker",new PageDTO(cri,service.getCount(cri)));
-}
+
+###### 8.SaleController
+
+
+	public void getSaleList(Criteria cri,Model model){
+
+			cri.setAmount(12);
+
+	model.addAttribute("pageMaker",new PageDTO(cri,service.getCount(cri)));
+	}
+
+
 --------------------------------------------------------------------------------------------------------------
 1. cri 페이징 처리를 위해 setAmount 매서드의 파라메터로 12를 주고 호출,amoun는 한 페이지에 출력할 최대 개수임
 2. 페이징 처리를 위해 cri를 파라메터로 담고 getCount를 호출하여 결과를 pageDTO의 파라메터에 담아 페이징 처리를 함 
 --------------------------------------------------------------------------------------------------------------
-9.SaleService
-@Override
+
+
+
+
+###### 9.SaleService
+
+
 	@Override
-	   public int getCount(Criteria cri) {
-	      if(cri.getCateno() == 0) {
-	         return mapper.getCountNoneCate(cri);
-	      }
-	      return mapper.getCount(cri);	
+		@Override
+		   public int getCount(Criteria cri) {
+		      if(cri.getCateno() == 0) {
+			 return mapper.getCountNoneCate(cri);
+		      }
+		      return mapper.getCount(cri);	
+		      
+		      
 --------------------------------------------------------------------------------------------------------------
 1. 카테고리 번호가 0 이라면 getCountNoneCate 매퍼를 호출하고
 2. 카테고리 번호가 0 이 아니라면 getCount 매퍼를 호출함
 --------------------------------------------------------------------------------------------------------------
-10.SaleMapper
-<select id="getCount" resultType="int">
-      select count(*) from sale where
-      <include refid="criteria"/>
-       <![CDATA[
-          saleno > 0 and 
-          cateno = #{cateno}
-       ]]>
-   </select>  <select id="getCountNoneCate" resultType="int">
-      select count(*) from sale where
-      <include refid="criteria"/>
-       <![CDATA[
-          saleno > 0 
-       ]]>
-   </select>
+
+
+
+
+###### 10.SaleMapper
+
+
+	<select id="getCount" resultType="int">
+	      select count(*) from sale where
+	      <include refid="criteria"/>
+	       <![CDATA[
+		  saleno > 0 and 
+		  cateno = #{cateno}
+	       ]]>
+	   </select>  <select id="getCountNoneCate" resultType="int">
+	      select count(*) from sale where
+	      <include refid="criteria"/>
+	       <![CDATA[
+		  saleno > 0 
+	       ]]>
+	   </select>
+	   
+	   
 --------------------------------------------------------------------------------------------------------------
 1. 카테고리 번호가 0 이라면 모든 상품을 가져오는 getCountNoneCate의 쿼리를 수행
 2. 카테고리 번호가 0 이 아니라면 선택한 카테고리 번호에 해당하는 상품만 가져오는 getCount의 쿼리를 수행
@@ -1059,213 +1235,300 @@ model.addAttribute("pageMaker",new PageDTO(cri,service.getCount(cri)));
 
 
 
+###### 11. 상품 목록 페이지
 
-11. 상품 목록 페이지
- <c:forEach items="${list}" var="sale" varStatus="i">
-         <c:set var="checkList" value="${checkList+1 }"/>
-<c:if test="${checkList == null}">
-         <span style="margin:auto;">등록된 상품이 없습니다.</span>
+
+	 <c:forEach items="${list}" var="sale" varStatus="i">
+		 <c:set var="checkList" value="${checkList+1 }"/>
+	<c:if test="${checkList == null}">
+		 <span style="margin:auto;">등록된 상품이 없습니다.</span>
+		 
+		 
 --------------------------------------------------------------------------------------------------------------
-1. 해당 카테고리나 전체 상품중 상품이 없다면 등록된 상품이 없다는 글을 출력해줌
---------------------------------------------------------------------------------------------------------------
+해당 카테고리나 전체 상품중 상품이 없다면 등록된 상품이 없다는 글을 출력해줌
 
 
 
 
+##### 2.2 상품 상세페이지
 
 
+###### 1.SaleController
 
 
-
-
-
-
-
-
-
-2.2 상품 상세페이지
-1.SaleController
-@GetMapping("/detail")
-	   public void getDetail(@Param("saleno")int saleno ,Model model,Criteria cri) {
-	      model.addAttribute("saleno",saleno);
-	      model.addAttribute("sale",service.getSaleInfo(saleno));
-	   }
+	@GetMapping("/detail")
+		   public void getDetail(@Param("saleno")int saleno ,Model model,Criteria cri) {
+		      model.addAttribute("saleno",saleno);
+		      model.addAttribute("sale",service.getSaleInfo(saleno));
+		   }
+		   
+		   
 --------------------------------------------------------------------------------------------------------------
 1. 상품 목록에서 선택한 상품의 번호를 가져와서 Service로 넘김
 --------------------------------------------------------------------------------------------------------------
-2.SaleService
-@Override
-	public SaleVO getSaleInfo(int saleno) {
-		log.info("getSaleInfo..");
-		return mapper.getSaleInfo(saleno);
-	}
+
+
+
+
+###### 2.SaleService
+
+
+	@Override
+		public SaleVO getSaleInfo(int saleno) {
+			log.info("getSaleInfo..");
+			return mapper.getSaleInfo(saleno);
+		}
+		
+		
 --------------------------------------------------------------------------------------------------------------
-1. Controller에서 받아온 saleno를 mapper에 넘김
+Controller에서 받아온 saleno를 mapper에 넘김
+
+
+
+
+###### 3.SaleMapper
+
+
+	<select id="getSaleInfo" resultMap="saleMap">
+			select s.saleno,salename, to_char(cost,'999,999')||'원' cost,content,amount,
+				(select count(*) from sale_good where saleno = #{saleno}) as good,
+				s.updatedate,uuid,imagepath,filename,c.catename,s.cateno 
+				from 
+				sale s,sale_img i,sale_cate c
+				where s.cateno = c.cateno and 
+				i.saleno = s.saleno and
+				s.saleno = #{saleno}
+		</select>
+		
+		
 --------------------------------------------------------------------------------------------------------------
-
-
-
-3.SaleMapper
-<select id="getSaleInfo" resultMap="saleMap">
-		select s.saleno,salename, to_char(cost,'999,999')||'원' cost,content,amount,
-			(select count(*) from sale_good where saleno = #{saleno}) as good,
-			s.updatedate,uuid,imagepath,filename,c.catename,s.cateno 
-			from 
-			sale s,sale_img i,sale_cate c
-			where s.cateno = c.cateno and 
-			i.saleno = s.saleno and
-			s.saleno = #{saleno}
-	</select>
---------------------------------------------------------------------------------------------------------------
-1. 선택한 상품의 번호와 일치하는 상품의 정보를 가져와서 출력해줌
---------------------------------------------------------------------------------------------------------------
+선택한 상품의 번호와 일치하는 상품의 정보를 가져와서 출력해줌
 
 
 
 
+##### 2.3 장바구니
 
 
+###### 1.Cart.js
 
 
-2.3 장바구니
-1.Cart.js
-function insertMainCart(cart,callback,error){
-		$.ajax({
-			url:'/cart/insertMainCart',
-			data:JSON.stringify(cart),
-			dataType : 'text',
-			contentType:'application/json; charset=utf-8',
-			type:'POST',
-			success: function(result,status,xhr){
-				if(callback){
-					callback(result);
-				}
-			},
-			error: function(xhr,status,er){
-				if(error){
-					error(er);
+	function insertMainCart(cart,callback,error){
+			$.ajax({
+				url:'/cart/insertMainCart',
+				data:JSON.stringify(cart),
+				dataType : 'text',
+				contentType:'application/json; charset=utf-8',
+				type:'POST',
+				success: function(result,status,xhr){
+					if(callback){
+						callback(result);
+					}
+				},
+				error: function(xhr,status,er){
+					if(error){
+						error(er);
+						
+						
 --------------------------------------------------------------------------------------------------------------
 1. 상품 목록페이지,상품 상세페이지에서 장바구니 담기 버튼을 누르면 해당 매서드 호출
 2. ajax 로 페이지 이동없이 상품의 번호(변수 cart에 담겨있음)를 넘김
 < cart 에는 userid(회원 아이디) , saleno(상품 번호) , amount ( 개수 ) 가 있음> 
 3. Controller에서 보내준 상태(status)를 비교하여 에러 메시지를 출력할지 완료 메시지를 출력할지 조건식을 거침
 4. 그리고 조건에 맞는 메시지를 출력함
-2.CartControlle
-@PostMapping(value="/insertMainCart",
-			produces= { 
-					MediaType.APPLICATION_XML_VALUE,
-					MediaType.APPLICATION_JSON_UTF8_VALUE
-				})
-	@ResponseBody
-	public ResponseEntity<String> insertMainCart(Principal prin,@RequestBody CartVO vo,Model model){
-	return Cservice.getMainCart(vo) == 1?new ResponseEntity<>("success",HttpStatus.OK):new ResponseEntity<>("fail",HttpStatus.OK);
-	}
+--------------------------------------------------------------------------------------------------------------
+
+
+
+
+###### 2.CartControlle
+
+
+	@PostMapping(value="/insertMainCart",
+				produces= { 
+						MediaType.APPLICATION_XML_VALUE,
+						MediaType.APPLICATION_JSON_UTF8_VALUE
+					})
+		@ResponseBody
+		public ResponseEntity<String> insertMainCart(Principal prin,@RequestBody CartVO vo,Model model){
+		return Cservice.getMainCart(vo) == 1?new ResponseEntity<>("success",HttpStatus.OK):new ResponseEntity<>("fail",HttpStatus.OK);
+		}
+		
+		
 --------------------------------------------------------------------------------------------------------------
 1. 반환하는 값의 형식을 xml,json형식을 반환하고 언어 코드를 UTF8로 반환
 2. 장바구니에 담을 상품의 번호를 VO에 담아 Service를 호출
 --------------------------------------------------------------------------------------------------------------
-3.CartService
-@Override
-	public int getMainCart(CartVO vo) {
-		return mapper.insertMainCart(vo);
-	}
+
+
+
+
+###### 3.CartService
+
+
+	@Override
+		public int getMainCart(CartVO vo) {
+			return mapper.insertMainCart(vo);
+		}
+		
+		
 --------------------------------------------------------------------------------------------------------------
 1. 상품의 번호(saleno)를 담은 vo를 파라메터로 담아 mapper의 inserMainCart를 호출 후 반환
 --------------------------------------------------------------------------------------------------------------
 
-4.CartMapper
-<insert id="insertMainCart">
- 	    insert into sale_cart 
-	    select #{userid},#{saleno},#{amount} from dual 
-	    where not exists 
-	    (select 0 from sale_cart 
-	    where userid = #{userid} and 
-	    saleno = #{saleno})
- 	</insert>
+
+
+
+###### 4.CartMapper
+
+
+	<insert id="insertMainCart">
+		    insert into sale_cart 
+		    select #{userid},#{saleno},#{amount} from dual 
+		    where not exists 
+		    (select 0 from sale_cart 
+		    where userid = #{userid} and 
+		    saleno = #{saleno})
+		</insert>
+		
+		
 --------------------------------------------------------------------------------------------------------------
-1. Service에서 받아온 vo 에서 상품 번호와 회원 아이디를 장바구니 목록을 추가함
---------------------------------------------------------------------------------------------------------------
-5.CartController
-public ResponseEntity<String> insertMainCart(
-Principal prin,@RequestBody CartVO vo,Model model){
-	return Cservice.getMainCart(vo) == 1	
-?new ResponseEntity<>("success",HttpStatus.OK):
-new ResponseEntity<>("fail",HttpStatus.OK);
-	}
+Service에서 받아온 vo 에서 상품 번호와 회원 아이디를 장바구니 목록을 추가함
+
+
+
+
+###### 5.CartController
+
+
+	public ResponseEntity<String> insertMainCart(
+	Principal prin,@RequestBody CartVO vo,Model model){
+		return Cservice.getMainCart(vo) == 1	
+	?new ResponseEntity<>("success",HttpStatus.OK):
+	new ResponseEntity<>("fail",HttpStatus.OK);
+		}
+		
+		
 --------------------------------------------------------------------------------------------------------------
 1. 장바구니에 등록이 된다면 1 이 반환되어 success를 등록에 문제가 생겨 안되었다면 0을 반환하여 fail을 반환
 --------------------------------------------------------------------------------------------------------------
 
 
-6.Cart.js
-function insertMainCart(cart,callback,error){
-	success: function(result,status,xhr){
-				if(callback){
-					callback(result);
-				}
-	error: function(xhr,status,er){
-				if(error){
-					error(er);
-				}
-7.제품 페이지
- if(result === 'success'){
-	 alert('장바구니에 추가하였습니다');
+
+
+###### 6.Cart.js
+
+
+	function insertMainCart(cart,callback,error){
+		success: function(result,status,xhr){
+					if(callback){
+						callback(result);
+					}
+		error: function(xhr,status,er){
+					if(error){
+						error(er);
+					}
+					
+					
+					
+					
+###### 7.제품 페이지
+
+
+	 if(result === 'success'){
+		 alert('장바구니에 추가하였습니다');
+		cartService.cartCount(function(count){
+		$("#cartIcon").html('<span class="icon-shopping_cart"></span>'+"["+count+"]");
+		}else{
+		alert('이미 추가된 상품입니다.');
 	cartService.cartCount(function(count){
-	$("#cartIcon").html('<span class="icon-shopping_cart"></span>'+"["+count+"]");
-	}else{
-	alert('이미 추가된 상품입니다.');
-cartService.cartCount(function(count){
- 	$("#cartIcon").html('<span class="icon-shopping_cart"></span>'+"["+count+"]");
-		    			 });
+		$("#cartIcon").html('<span class="icon-shopping_cart"></span>'+"["+count+"]");
+						 });
+						 
+						 
 --------------------------------------------------------------------------------------------------------------
 1. result에 success 가 들어오면 장바구니에 추가되었다는 alert창을 출력해주고 success가 아니라면 이미 추가되었다는 alert창을 출력
 2. 헤더 부분의 장바구니에 담긴 상품 개 수를 나타내주기 위해 cartCount를 호출함(callback)
-8.Cart.js
-function cartCount(callback,error){
-		$.getJSON("/cart/getCartCount",
-		function(data){
-			if(callback){
-				callback(data);
-			}
-		}).fail(function(xhr,status,err){
-			if(error){
-				error(er);
 --------------------------------------------------------------------------------------------------------------
-1. getCartCount를 매핑하여 Controller의 getCartCount를 호출함
+
+
+
+
+###### 8.Cart.js
+
+
+	function cartCount(callback,error){
+			$.getJSON("/cart/getCartCount",
+			function(data){
+				if(callback){
+					callback(data);
+				}
+			}).fail(function(xhr,status,err){
+				if(error){
+					error(er);
+					
+					
 --------------------------------------------------------------------------------------------------------------
-9.CartController
+getCartCount를 매핑하여 Controller의 getCartCount를 호출함
+
+
+
+
+###### 9.CartController
+
+
 	@ResponseBody
 	public ResponseEntity<String> getCartCount(Principal prin) {
 			String userid = prin.getName();
 			String cart = Cservice.getCartCount(userid);
 		return new ResponseEntity<>(cart,HttpStatus.OK);
 	}
+	
+	
 --------------------------------------------------------------------------------------------------------------
 1. 회원의 정보를 담은 Principal에서 getName로 회원의 id 만 userid 변수에 할당
 2. Service의 getCartCount 매서드의 파라메터 값으로 userid 를 넘기며 호출
 3. Service에서 반환되어진 값을 cart 변수에 담아 반환해주면서 상태 값도 같이 반환
-10.CartService
-@Override
-	public String getCartCount(String userid) {
-		return mapper.getCartCount(userid);
-	} // 매퍼 호출후 결과 반환
-11.CartMapper
-<select id="getCartCount" resultType="String">
- 		select count(*) from sale_cart where userid = #{userid}
- 	</select>
---------------------------------------------------------------------------------------------------------------
-1. 회원 아이디를 조회하여 해당 회원의 장바구니 목록의 개수를 String 으로 반환
---------------------------------------------------------------------------------------------------------------
-12.Header
-cartService.cartCount(function(count){
- 	$("#cartIcon").html('<span class="icon-shopping_cart"></span>'+"["+count+"]");
-		    		 });
---------------------------------------------------------------------------------------------------------------
-1. Mapper에서 반환받은 장바구니 개수를 count로 받아 장바구니 아이콘 옆에 출력
 --------------------------------------------------------------------------------------------------------------
 
 
 
+
+###### 10.CartService
+
+
+	@Override
+		public String getCartCount(String userid) {
+			return mapper.getCartCount(userid);
+		} // 매퍼 호출후 결과 반환
+		
+		
+		
+		
+###### 11.CartMapper
+
+
+	<select id="getCartCount" resultType="String">
+			select count(*) from sale_cart where userid = #{userid}
+		</select>
+		
+		
+--------------------------------------------------------------------------------------------------------------
+회원 아이디를 조회하여 해당 회원의 장바구니 목록의 개수를 String 으로 반환
+
+
+
+
+###### 12.Header
+
+
+	cartService.cartCount(function(count){
+		$("#cartIcon").html('<span class="icon-shopping_cart"></span>'+"["+count+"]");
+					 });
+					 
+					 
+--------------------------------------------------------------------------------------------------------------
+Mapper에서 반환받은 장바구니 개수를 count로 받아 장바구니 아이콘 옆에 출력
 
 
 
